@@ -17,6 +17,5 @@ spotbugs {
 
 tasks.register('runTpcc', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
-    systemProperty 'com.tsurugidb.tsubakuro.jnilib', "${project(':tsubakuro-ipc').buildDir}/native/libtsubakuro.so"
     mainClass = 'com.tsurugidb.tsubakuro.examples.tpcc.Main'
 }
