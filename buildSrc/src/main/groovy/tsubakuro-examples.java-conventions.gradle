@@ -1,0 +1,115 @@
+plugins {
+    id 'java'
+    id 'checkstyle'
+
+    id 'com.github.spotbugs'
+}
+
+group = 'com.tsurugidb.tsubakuro-examples'
+version = '0.0.1-SNAPSHOT'
+
+ext {
+    tsubakuroVersion = '0.0.1-SNAPSHOT'
+}
+
+if (hasProperty('mavenLocal')) {
+    repositories {
+        mavenLocal()
+    }
+} else {
+    repositories {
+        maven {
+            url 'https://maven.pkg.github.com/project-tsurugi/*'
+            content {
+                includeGroupByRegex 'com\\.tsurugidb.*'
+            }
+            credentials {
+                username findProperty('gpr.user') ?: System.getenv('GPR_USER')
+                password findProperty('gpr.key') ?: System.getenv('GPR_KEY')
+            }
+        }
+    }
+}
+
+repositories {
+    mavenCentral {
+        content {
+            excludeGroupByRegex 'com\\.tsurugidb.*'
+        }
+    }
+}
+
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 8, 'hours'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
+}
+
+checkstyle {
+    configFile = rootProject.file('buildSrc/src/main/resources/checkstyle.xml')
+    if ('strict' == findProperty('checkMode')) {
+        maxWarnings = 0
+    }
+}
+
+spotbugsMain {
+    reports {
+        xml {
+            enabled = true
+            destination = file("$buildDir/reports/spotbugs/main/spotbugs.xml")
+        }
+    }
+}
+
+checkstyleMain.enabled = false
+checkstyleTest.enabled = false
+spotbugsMain.enabled = false
+spotbugsTest.enabled = false
+
+tasks.withType(JavaCompile) { task ->
+    task.options.encoding = 'UTF-8'
+}
+
+task sourcesJar(type: Jar) {
+    classifier 'sources'
+    from sourceSets.main.allSource
+}
+
+task testsJar(type: Jar) {
+    classifier 'tests'
+    from sourceSets.test.output
+}
+
+artifacts {
+    archives tasks.sourcesJar
+    archives tasks.testsJar
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    systemProperty('junit.jupiter.testclass.order.default', 'org.junit.jupiter.api.ClassOrderer$OrderAnnotation')
+
+    testLogging {
+        showStandardStreams true
+        events 'started', 'skipped', 'passed', 'failed'
+        exceptionFormat 'full'
+    }
+}
+
+task showTsubakuroManifest {
+    doLast {
+        def tsubakuroJar = configurations["compileClasspath"].filter {
+            it.name.startsWith("tsubakuro-session")
+        }
+        def version = resources.text.fromArchiveEntry(tsubakuroJar, "META-INF/MANIFEST.MF")
+        print(version.asString())
+    }
+}
