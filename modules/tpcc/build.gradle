@@ -1,21 +1,18 @@
 plugins {
-    id 'tsubakuro-examples.libs-conventions'
-}
-
-dependencies {
-    api "com.tsurugidb.tsubakuro:tsubakuro-session:${tsubakuroVersion}"
-    api "com.tsurugidb.tsubakuro:tsubakuro-connector:${tsubakuroVersion}"
-    api "com.tsurugidb.tsubakuro:tsubakuro-explain:${tsubakuroVersion}"
-
-    api 'com.google.code.findbugs:jsr305:3.0.2'
-    implementation 'org.slf4j:slf4j-simple:1.7.32'
-}
-
-spotbugs {
-    excludeFilter = file("$projectDir/config/spotbugs/spotbugsExclude.xml")
+    id 'tsubakuro-examples.app-conventions'
 }
 
 tasks.register('runTpcc', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'com.tsurugidb.tsubakuro.examples.tpcc.Main'
+
+    systemProperty 'com.tsurugidb.tsubakuro.jnilib', "${buildDir}/native/libtsubakuro.so"
+    systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'ipc:tateyama'
+
+    systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
+    systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'
+    systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
+    systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
+
+    dependsOn copyNativeLib
 }
