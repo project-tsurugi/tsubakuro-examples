@@ -1,0 +1,81 @@
+name: Tsubakuro-Examples-CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  Build:
+    strategy:
+      fail-fast: false
+      matrix:
+        container-tag: [ubuntu-20.04]
+    runs-on: [self-hosted, docker]
+    timeout-minutes: 30
+    container:
+      image: ghcr.io/project-tsurugi/oltp-sandbox:${{ matrix.container-tag }}
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GHCR_PAT }}
+      volumes:
+        - /work/docker-cache/.gradle:/root/.gradle
+    defaults:
+      run:
+        shell: bash
+    env:
+      GPR_USER: ${{ github.repository_owner }}
+      GPR_KEY: ${{ secrets.GHCR_PAT }}
+
+    steps:
+      - id: Checkout
+        name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets.GHA_PAT }}
+
+      - id: Checkout_Actions
+        name: Checkout_Actions
+        uses: actions/checkout@v3
+        with:
+          repository: project-tsurugi/tsurugi-github-actions
+          path: .github/actions
+          ref: master
+          submodules: recursive
+          token: ${{ secrets.GHA_PAT }}
+
+      - id: Assemble
+        name: Assemble
+        run: |
+          ./gradlew -i clean assemble
+
+      - id: Check
+        name: Check
+        run: |
+          ./gradlew -i check --continue
+
+      - id: Generate_Annotations
+        name: Generate_Annotations
+        uses: ./.github/actions/tsurugi-annotations-action
+        if: always()
+        with:
+          matrix: ${{ toJson(matrix) }}
+          junit_input: '**/build/test-results/**/TEST-*.xml'
+          junit_test_src_dir: 'src/test/java'
+          spotbugs_input: '**/build/reports/spotbugs/main/*.xml'
+          checkstyle_input: '**/build/reports/checkstyle/main.xml'
+
+      - id: Notify_Slack
+        name: Notify_Slack
+        uses: ./.github/actions/tsurugi-slack-action
+        if: always() && (github.event.pull_request.draft == false) && (contains(github.ref, '/tags/') || contains(github.ref, '/pull/') || contains(github.ref, '/heads/master'))
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          MATRIX_CONTEXT: ${{ toJson(matrix) }}
+        with:
+          kind: 'job-result'
+          channel: 'tsurugi-build'
+          status: ${{ job.status }}
+          step_context: ${{ toJson(steps) }}
+          username: ${{ github.workflow }}

@@ -15,7 +15,7 @@ import com.tsurugidb.tsubakuro.exception.ServerException;
 import com.tsurugidb.tsubakuro.sql.SqlClient;
 
 public final class Main {
-    private static String url = "ipc:tateyama";
+    private static String url = System.getProperty("tsurugi.dbname");
 
     static long warehouses()  throws IOException, ServerException, InterruptedException, TimeoutException {
         try (
