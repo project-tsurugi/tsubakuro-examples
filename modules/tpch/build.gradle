@@ -1,0 +1,22 @@
+plugins {
+    id 'tsubakuro-examples.app-conventions'
+}
+
+dependencies {
+    implementation 'commons-cli:commons-cli:1.4'
+}
+
+tasks.register('runTpch', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tsurugidb.tsubakuro.examples.tpch.Main'
+
+    systemProperty 'com.tsurugidb.tsubakuro.jnilib', "${buildDir}/native/libtsubakuro.so"
+    systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'ipc:tateyama'
+
+    systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
+    systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'
+    systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
+    systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
+
+    dependsOn copyNativeLib
+}
