@@ -19,7 +19,7 @@ import com.tsurugidb.tsubakuro.sql.SqlClient;
 import com.tsurugidb.sql.proto.SqlRequest;
 
 public final class Main {
-    private static String url = "ipc:tateyama";
+    private static String url = System.getProperty("tsurugi.dbname");
 
     static long scale()  throws IOException, ServerException, InterruptedException, TimeoutException {
         try (
