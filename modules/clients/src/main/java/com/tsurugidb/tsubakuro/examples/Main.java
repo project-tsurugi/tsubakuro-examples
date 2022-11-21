@@ -28,6 +28,7 @@ public final class Main {
     private static String url = System.getProperty("tsurugi.dbname");
 
     private static boolean selectOnly = false;
+    private static boolean textInsert = false;
     private static int loopCount = 1;
     private static int selectCount = 1;
     private static int threadCount = 1;
@@ -38,6 +39,7 @@ public final class Main {
         Options options = new Options();
 
         options.addOption(Option.builder("s").argName("select").desc("Select only mode.").build());
+        options.addOption(Option.builder("t").argName("text_insert").desc("Do Insert by text SQL.").build());
         options.addOption(Option.builder("c").argName("concurrency").hasArg().desc("Specify the number of threads conducting the select operation.").build());
         options.addOption(Option.builder("n").argName("number").hasArg().desc("Specify the execution count of the select operation.").build());
         options.addOption(Option.builder("l").argName("loops").hasArg().desc("Specify the number of loop count of the thread invocation.").build());
@@ -52,6 +54,10 @@ public final class Main {
             if (cmd.hasOption("s")) {
                 selectOnly = true;
                 System.err.println("select only");
+            }
+            if (cmd.hasOption("t")) {
+                textInsert = true;
+                System.err.println("text insert");
             }
             if (cmd.hasOption("n")) {
                 selectCount = Integer.parseInt(cmd.getOptionValue("n"));
@@ -81,7 +87,11 @@ public final class Main {
 
             if (!selectOnly) {
                 var insert = new Insert(sqlClient);
-                insert.prepareAndInsert();
+                if (!textInsert) {
+                    insert.prepareAndInsert();
+                } else {
+                    insert.insertByText();
+                }
             }
             var select = new Select(sqlClient, loopCount, selectCount, threadCount);
             select.prepareAndSelect();

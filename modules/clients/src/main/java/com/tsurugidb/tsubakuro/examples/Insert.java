@@ -1,6 +1,8 @@
 package com.tsurugidb.tsubakuro.examples;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import com.tsurugidb.tsubakuro.exception.ServerException;
 import com.tsurugidb.tsubakuro.sql.SqlClient;
@@ -16,12 +18,12 @@ public class Insert {
     }
 
     public void prepareAndInsert() throws IOException, ServerException, InterruptedException {
-        String sql = "INSERT INTO ORDERS (o_id, o_c_id, o_d_id, o_w_id, o_entry_d, o_carrier_id, o_ol_cnt, o_all_local) VALUES (:o_id, :o_c_id, :o_d_id, :o_w_id, :o_entry_d, :o_carrier_id, :o_ol_cnt, :o_all_local)";
+        String sql = "INSERT INTO ORDERS (o_id, o_d_id, o_w_id, o_c_id, o_entry_d, o_carrier_id, o_ol_cnt, o_all_local) VALUES (:o_id, :o_d_id, :o_w_id, :o_c_id, :o_entry_d, :o_carrier_id, :o_ol_cnt, :o_all_local)";
         try (var preparedStatement = sqlClient.prepare(sql,
         Placeholders.of("o_id", long.class),
-        Placeholders.of("o_c_id", long.class),
         Placeholders.of("o_d_id", long.class),
         Placeholders.of("o_w_id", long.class),
+        Placeholders.of("o_c_id", long.class),
         Placeholders.of("o_entry_d", String.class),
         Placeholders.of("o_carrier_id", long.class),
         Placeholders.of("o_ol_cnt", long.class),
@@ -32,15 +34,29 @@ public class Insert {
             try {
                 var result = transaction.executeStatement(preparedStatement,
                     Parameters.of("o_id", (long) 99999999),
-                    Parameters.of("o_c_id", (long) 1234),
                     Parameters.of("o_d_id", (long) 3),
                     Parameters.of("o_w_id", (long) 1),
+                    Parameters.of("o_c_id", (long) 1234),
                     Parameters.of("o_entry_d", "20210620"),
                     Parameters.of("o_carrier_id", (long) 3),
                     Parameters.of("o_ol_cnt", (long) 7),
                     Parameters.of("o_all_local", (long) 0)).get();
                 transaction.commit().get();
             } catch (ServerException e) {
+                transaction.rollback().get();
+            }
+        }
+    }
+    public void insertByText() throws IOException, ServerException, InterruptedException {
+        //        String sql = "INSERT INTO ORDERS (o_id, o_d_id, o_w_id, o_c_id, o_entry_d, o_carrier_id, o_ol_cnt, o_all_local) VALUES (99999999, 3, 1, 5678, '20221120', 2, 6, 0)";
+        String sql = "INSERT INTO ORDERS VALUES (99999999, 3, 1, 5678, '20221120', 2, 6, 0)";
+        try (Transaction transaction = sqlClient.createTransaction().await()) {
+            try {
+                var result = transaction.executeStatement(sql).get();
+                transaction.commit().get();
+                //            } catch (ServerException | TimeoutException e) {
+            } catch (ServerException e) {
+                System.out.println(e);
                 transaction.rollback().get();
             }
         }
