@@ -213,9 +213,9 @@ public class Delivery {
                     // "UPDATE CUSTOMER SET c_balance = c_balance + :ol_total WHERE c_id = :c_id AND c_d_id = :c_d_id AND c_w_id = :c_w_id"
                     var future7 = transaction.executeStatement(prepared7,
                         Parameters.of("ol_total", (double) olTotal),
-                        Parameters.of("ol_o_id", (long) cId),
-                        Parameters.of("ol_d_id", (long) dId),
-                        Parameters.of("ol_w_id", (long) paramsWid));
+                        Parameters.of("c_id", (long) cId),
+                        Parameters.of("c_d_id", (long) dId),
+                        Parameters.of("c_w_id", (long) paramsWid));
                     var result7 = future7.get();
                 } catch (ServerException e) {
                     profile.customerTable.delivery++;
