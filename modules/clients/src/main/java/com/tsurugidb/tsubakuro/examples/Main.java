@@ -33,6 +33,8 @@ public final class Main {
     private static int selectCount = 1;
     private static int threadCount = 1;
     private static int sleepSeconds = 0;
+    private static int sessionCount = 1;
+    private static boolean suppressDisplay = false;
 
     public static void main(String[] args) {
         // コマンドラインオプションの設定
@@ -44,6 +46,8 @@ public final class Main {
         options.addOption(Option.builder("n").argName("number").hasArg().desc("Specify the execution count of the select operation.").build());
         options.addOption(Option.builder("l").argName("loops").hasArg().desc("Specify the number of loop count of the thread invocation.").build());
         options.addOption(Option.builder("p").argName("pause").hasArg().desc("Sleep specified time before session close.").build());
+        options.addOption(Option.builder("d").argName("display").desc("No result printout.").build());
+        options.addOption(Option.builder("m").argName("session number").hasArg().desc("The number of session.").build());
 
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = null;
@@ -75,31 +79,44 @@ public final class Main {
                 sleepSeconds = Integer.parseInt(cmd.getOptionValue("p"));
                 System.err.println("sleep before session close for " + sleepSeconds + " seconds");
             }
+            if (cmd.hasOption("d")) {
+                suppressDisplay = true;
+                System.err.println("No result display");
+            }
+            if (cmd.hasOption("m")) {
+                sessionCount = Integer.parseInt(cmd.getOptionValue("m"));
+                System.err.println("Session count = " + sessionCount);
+            }
         } catch (ParseException e) {
             System.err.println("cmd parser failed." + e);
         }
 
-        try (
-            Session session = SessionBuilder.connect(url)
-            .withCredential(new UsernamePasswordCredential("user", "pass"))
-            .create(10, TimeUnit.SECONDS);
-            SqlClient sqlClient = SqlClient.attach(session);) {
+        for (int i = 0; i < sessionCount; i++ ) {
+            if (sessionCount > 1) {
+                System.out.println("======== session no. " + (i + 1) + " ========");
+            }
+            try (
+                 Session session = SessionBuilder.connect(url)
+                 .withCredential(new UsernamePasswordCredential("user", "pass"))
+                 .create(10, TimeUnit.SECONDS);
+                 SqlClient sqlClient = SqlClient.attach(session);) {
 
-            if (!selectOnly) {
-                var insert = new Insert(sqlClient);
-                if (!textInsert) {
-                    insert.prepareAndInsert();
-                } else {
-                    insert.insertByText();
+                if (!selectOnly) {
+                    var insert = new Insert(sqlClient);
+                    if (!textInsert) {
+                        insert.prepareAndInsert();
+                    } else {
+                        insert.insertByText();
+                    }
                 }
+                var select = new Select(sqlClient, loopCount, selectCount, threadCount, suppressDisplay);
+                select.prepareAndSelect();
+                if (sleepSeconds > 0) {
+                    Thread.sleep(sleepSeconds * 1000);
+                }
+            } catch (IOException | ServerException | InterruptedException | TimeoutException e) {
+                System.out.println(e);
             }
-            var select = new Select(sqlClient, loopCount, selectCount, threadCount);
-            select.prepareAndSelect();
-            if (sleepSeconds > 0) {
-                Thread.sleep(sleepSeconds * 1000);
-            }
-        } catch (IOException | ServerException | InterruptedException | TimeoutException e) {
-            System.out.println(e);
         }
     }
 }

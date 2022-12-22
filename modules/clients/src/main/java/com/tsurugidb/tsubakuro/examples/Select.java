@@ -15,14 +15,17 @@ public class Select {
     final int loopCount;
     final int selectCount;
     final int threadCount;
+    final boolean suppressDisplay;
 
     static class ThreadForSelect extends Thread {
         final SqlClient sqlClient;
         final int selectCount;
+        final boolean suppressDisplay;
 
-        ThreadForSelect(SqlClient sqlClient, int selectCount) {
+        ThreadForSelect(SqlClient sqlClient, int selectCount, boolean suppressDisplay) {
             this.sqlClient = sqlClient;
             this.selectCount = selectCount;
+            this.suppressDisplay = suppressDisplay;
         }
         public void run() {
             String sql = "SELECT * FROM ORDERS WHERE o_w_id = :o_w_id AND o_d_id = :o_d_id AND o_id = :o_id";
@@ -35,10 +38,12 @@ public class Select {
 
                 for (int i = 0; i < selectCount; i++) {
                     try (var resultSet = transaction.executeQuery(preparedStatement,
-                    Parameters.of("o_id", (long) 99999999),
-                    Parameters.of("o_d_id", (long) 3),
-                    Parameters.of("o_w_id", (long) 1)).get(2000, TimeUnit.MILLISECONDS)) {
-                        printResultset(resultSet);
+                                                                  Parameters.of("o_id", (long) 99999999),
+                                                                  Parameters.of("o_d_id", (long) 3),
+                                                                  Parameters.of("o_w_id", (long) 1)).get(2000, TimeUnit.MILLISECONDS)) {
+                        if (!suppressDisplay) {
+                            printResultset(resultSet);
+                        }
                     }
                 }
                 transaction.commit().await();
@@ -87,18 +92,19 @@ public class Select {
         }
     }
 
-    public Select(SqlClient sqlClient, int loopCount, int selectCount, int threadCount) throws IOException, ServerException, InterruptedException {
+    public Select(SqlClient sqlClient, int loopCount, int selectCount, int threadCount, boolean suppressDisplay) throws IOException, ServerException, InterruptedException {
         this.sqlClient = sqlClient;
         this.loopCount = loopCount;
         this.selectCount = selectCount;
         this.threadCount = threadCount;
+        this.suppressDisplay = suppressDisplay;
     }
 
     public void prepareAndSelect() throws IOException, ServerException, InterruptedException {
         Thread[] threads = new Thread[threadCount];
         for (int j = 0; j < loopCount; j++) {
             for (int i = 0; i < threadCount; i++) {
-                threads[i] =  new ThreadForSelect(sqlClient, selectCount);
+                threads[i] =  new ThreadForSelect(sqlClient, selectCount, suppressDisplay);
                 threads[i].start();
             }
             for (int i = 0; i < threadCount; i++) {

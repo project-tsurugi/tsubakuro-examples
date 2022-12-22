@@ -52,10 +52,10 @@ public class Insert {
         String sql = "INSERT INTO ORDERS VALUES (99999999, 3, 1, 5678, '20221120', 2, 6, 0)";
         try (Transaction transaction = sqlClient.createTransaction().await()) {
             try {
-                var result = transaction.executeStatement(sql).get();
+                var result = transaction.executeStatement(sql).get(100, TimeUnit.SECONDS);
                 transaction.commit().get();
                 //            } catch (ServerException | TimeoutException e) {
-            } catch (ServerException e) {
+            } catch (ServerException | TimeoutException e) {
                 System.out.println(e);
                 transaction.rollback().get();
             }
