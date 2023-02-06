@@ -11,9 +11,9 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import com.tsurugidb.tsubakuro.channel.common.connection.UsernamePasswordCredential;
-import com.tsurugidb.tsubakuro.common.Session;
-import com.tsurugidb.tsubakuro.common.SessionBuilder;
+//import com.tsurugidb.tsubakuro.channel.common.connection.UsernamePasswordCredential;
+//import com.tsurugidb.tsubakuro.common.Session;
+//import com.tsurugidb.tsubakuro.common.SessionBuilder;
 import com.tsurugidb.tsubakuro.exception.ServerException;
 import com.tsurugidb.tsubakuro.sql.SqlClient;
 
@@ -35,6 +35,7 @@ public final class Main {
     private static int sleepSeconds = 0;
     private static int sessionCount = 1;
     private static boolean suppressDisplay = false;
+    private static long timeout = 5000;
 
     public static void main(String[] args) {
         // コマンドラインオプションの設定
@@ -48,6 +49,7 @@ public final class Main {
         options.addOption(Option.builder("p").argName("pause").hasArg().desc("Sleep specified time before session close.").build());
         options.addOption(Option.builder("d").argName("display").desc("No result printout.").build());
         options.addOption(Option.builder("m").argName("session number").hasArg().desc("The number of session.").build());
+        options.addOption(Option.builder("o").argName("timeout").hasArg().desc("timeout value.").build());
 
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = null;
@@ -87,6 +89,10 @@ public final class Main {
                 sessionCount = Integer.parseInt(cmd.getOptionValue("m"));
                 System.err.println("Session count = " + sessionCount);
             }
+            if (cmd.hasOption("o")) {
+                timeout = Long.parseLong(cmd.getOptionValue("o")) * 1000;
+                System.err.println("tmeout = " + timeout);
+            }
         } catch (ParseException e) {
             System.err.println("cmd parser failed." + e);
         }
@@ -95,26 +101,18 @@ public final class Main {
             if (sessionCount > 1) {
                 System.out.println("======== session no. " + (i + 1) + " ========");
             }
-            try (
-                 Session session = SessionBuilder.connect(url)
-                 .withCredential(new UsernamePasswordCredential("user", "pass"))
-                 .create(10, TimeUnit.SECONDS);
-                 SqlClient sqlClient = SqlClient.attach(session);) {
-
+            try {
                 if (!selectOnly) {
-                    var insert = new Insert(sqlClient);
+                    var insert = new Insert(url);
                     if (!textInsert) {
                         insert.prepareAndInsert();
                     } else {
                         insert.insertByText();
                     }
                 }
-                var select = new Select(sqlClient, loopCount, selectCount, threadCount, suppressDisplay);
+                var select = new Select(url, loopCount, selectCount, threadCount, suppressDisplay, sleepSeconds, timeout);
                 select.prepareAndSelect();
-                if (sleepSeconds > 0) {
-                    Thread.sleep(sleepSeconds * 1000);
-                }
-            } catch (IOException | ServerException | InterruptedException | TimeoutException e) {
+            } catch (IOException | ServerException | InterruptedException e) {
                 System.out.println(e);
             }
         }

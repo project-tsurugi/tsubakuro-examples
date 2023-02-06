@@ -5,31 +5,39 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import com.tsurugidb.tsubakuro.exception.ServerException;
+import com.tsurugidb.tsubakuro.channel.common.connection.UsernamePasswordCredential;
+import com.tsurugidb.tsubakuro.common.Session;
+import com.tsurugidb.tsubakuro.common.SessionBuilder;
 import com.tsurugidb.tsubakuro.sql.SqlClient;
 import com.tsurugidb.tsubakuro.sql.Transaction;
 import com.tsurugidb.tsubakuro.sql.Placeholders;
 import com.tsurugidb.tsubakuro.sql.Parameters;
 
 public class Insert {
+    final String url;
     SqlClient sqlClient;
 
-    public Insert(SqlClient sqlClient) throws IOException, ServerException, InterruptedException {
-        this.sqlClient = sqlClient;
+    public Insert(String url) throws IOException, ServerException, InterruptedException {
+        this.url = url;
     }
 
     public void prepareAndInsert() throws IOException, ServerException, InterruptedException {
         String sql = "INSERT INTO ORDERS (o_id, o_d_id, o_w_id, o_c_id, o_entry_d, o_carrier_id, o_ol_cnt, o_all_local) VALUES (:o_id, :o_d_id, :o_w_id, :o_c_id, :o_entry_d, :o_carrier_id, :o_ol_cnt, :o_all_local)";
-        try (var preparedStatement = sqlClient.prepare(sql,
-        Placeholders.of("o_id", long.class),
-        Placeholders.of("o_d_id", long.class),
-        Placeholders.of("o_w_id", long.class),
-        Placeholders.of("o_c_id", long.class),
-        Placeholders.of("o_entry_d", String.class),
-        Placeholders.of("o_carrier_id", long.class),
-        Placeholders.of("o_ol_cnt", long.class),
-        Placeholders.of("o_all_local", long.class)).get();
+        try (Session session = SessionBuilder.connect(url)
+             .withCredential(new UsernamePasswordCredential("user", "pass"))
+             .create(10, TimeUnit.SECONDS);
+             SqlClient sqlClient = SqlClient.attach(session);
+             var preparedStatement = sqlClient.prepare(sql,
+                                                       Placeholders.of("o_id", long.class),
+                                                       Placeholders.of("o_d_id", long.class),
+                                                       Placeholders.of("o_w_id", long.class),
+                                                       Placeholders.of("o_c_id", long.class),
+                                                       Placeholders.of("o_entry_d", String.class),
+                                                       Placeholders.of("o_carrier_id", long.class),
+                                                       Placeholders.of("o_ol_cnt", long.class),
+                                                       Placeholders.of("o_all_local", long.class)).get();
 
-        Transaction transaction = sqlClient.createTransaction().await()) {
+             Transaction transaction = sqlClient.createTransaction().await()) {
 
             try {
                 var result = transaction.executeStatement(preparedStatement,
@@ -45,6 +53,8 @@ public class Insert {
             } catch (ServerException e) {
                 transaction.rollback().get();
             }
+        } catch (TimeoutException e) {
+                System.out.println(e);
         }
     }
     public void insertByText() throws IOException, ServerException, InterruptedException {

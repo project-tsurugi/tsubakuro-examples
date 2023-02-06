@@ -30,6 +30,8 @@ import com.tsurugidb.tsubakuro.sql.SqlClient;
 import com.tsurugidb.tsubakuro.sql.Transaction;
 import com.tsurugidb.tsubakuro.sql.Placeholders;
 import com.tsurugidb.tsubakuro.sql.Parameters;
+import com.tsurugidb.tsubakuro.sql.ResultSet;
+import com.tsurugidb.tsubakuro.sql.ResultSetMetadata;
 
 public final class Main {
     private static String url = System.getProperty("tsurugi.dbname");
@@ -41,13 +43,7 @@ public final class Main {
         // コマンドラインオプションの設定
         Options options = new Options();
 
-        options.addOption(Option.builder("d").argName("describe").desc("do describe table.").build());
-        options.addOption(Option.builder("p").argName("prepare").desc("do prepare full.").build());
-        options.addOption(Option.builder("q").argName("prepare").desc("do prepare no interval.").build());
-        options.addOption(Option.builder("r").argName("prepare").desc("do prepare no zone.").build());
-        options.addOption(Option.builder("s").argName("prepare").desc("do prepare no date time.").build());
-        options.addOption(Option.builder("t").argName("prepare").desc("do prepare no timestamp.").build());
-        options.addOption(Option.builder("u").argName("prepare").desc("do prepare only int and char.").build());
+        options.addOption(Option.builder("z").argName("prepare").desc("do simple test.").build());
 
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = null;
@@ -64,120 +60,82 @@ public final class Main {
                 System.out.println(meta);
             }
 
-            if (cmd.hasOption("p")) {
-                String sql = "INSERT INTO new_type_test (colpk, colA_numeric, colB_numeric_p6, colC_numeric_p6_s4, col1_timestamp, col2_timestamp_0, col3_timestamp_5, col4_date, col5_time_3, col6_interval_2, col7_interval_S_4, col8_timestamptz_5, col9_timetz_6, col0_varchar_11) VALUES (:colpk, :colA_numeric, :colB_numeric_p6, :colC_numeric_p6_s4, :col1_timestamp, :col2_timestamp_0, :col3_timestamp_5, :col4_date, :col5_time_3, :col6_interval_2, :col7_interval_S_4, :col8_timestamptz_5, :col9_timetz_6, :col0_varchar_11)";
-                try (var preparedStatement = sqlClient.prepare(sql,
-                                                               Placeholders.of("colpk", int.class),
-                                                               Placeholders.of("colA_numeric", BigDecimal.class),
-                                                               Placeholders.of("colB_numeric_p6", BigDecimal.class),
-                                                               Placeholders.of("colC_numeric_p6_s4", BigDecimal.class),
-                                                               Placeholders.of("col1_timestamp", LocalDateTime.class),
-                                                               Placeholders.of("col2_timestamp_0", LocalDateTime.class),
-                                                               Placeholders.of("col3_timestamp_5", LocalDateTime.class),
-                                                               Placeholders.of("col4_date", LocalDate.class),
-                                                               Placeholders.of("col5_time_3", LocalTime.class),
-                                                               Placeholders.of("col6_interval_2", DateTimeInterval.class),
-                                                               Placeholders.of("col7_interval_S_4", DateTimeInterval.class),
-                                                               Placeholders.of("col8_timestamptz_5", OffsetDateTime.class),
-                                                               Placeholders.of("col9_timetz_6", OffsetTime.class),
-                                                               Placeholders.of("col0_varchar_11", String.class)).get();
+            if (cmd.hasOption("z")) {
+                String insert = "INSERT INTO decimal_test (pk, dec_value, date_value, ts_value) VALUES (:pk, :dec_value, :date_value, :ts_value)";
+                String select = "SELECT * FROM decimal_test";
+                try (var preparedStatementInsert = sqlClient.prepare(insert,
+                                                                     Placeholders.of("pk", int.class),
+                                                                     Placeholders.of("dec_value", BigDecimal.class),
+                                                                     Placeholders.of("date_value", LocalDate.class),
+                                                                     Placeholders.of("ts_value", LocalDateTime.class)).get();
+                     var preparedStatementSelect = sqlClient.prepare(select).get();
                      Transaction transaction = sqlClient.createTransaction().await()) {
+
+                    transaction.executeStatement(preparedStatementInsert,
+                                                 Parameters.of("pk", 10),
+                                                 //                                                 Parameters.of("dec_value", BigDecimal.valueOf(1.2)),
+                                                 Parameters.of("dec_value", BigDecimal.ONE),
+                                                 Parameters.of("date_value", LocalDate.of(2023, 1, 10)),
+                                                 Parameters.of("ts_value", LocalDateTime.of(LocalDate.ofEpochDay(10_000), LocalTime.ofNanoOfDay(123_456_789)))).get();
+
+                    try (var resultSet = transaction.executeQuery(preparedStatementSelect).get(); ) {
+                        printResultset(resultSet);
+                    }
+                    
+                    transaction.commit();
                 }
-                System.out.println("full success");
             }
-            if (cmd.hasOption("q")) {
-                String sql = "INSERT INTO new_type_test (colpk, colA_numeric, colB_numeric_p6, colC_numeric_p6_s4, col1_timestamp, col2_timestamp_0, col3_timestamp_5, col4_date, col5_time_3, col8_timestamptz_5, col9_timetz_6, col0_varchar_11) VALUES (:colpk, :colA_numeric, :colB_numeric_p6, :colC_numeric_p6_s4, :col1_timestamp, :col2_timestamp_0, :col3_timestamp_5, :col4_date, :col5_time_3, :col8_timestamptz_5, :col9_timetz_6, :col0_varchar_11)";
-                try (var preparedStatement = sqlClient.prepare(sql,
-                                                               Placeholders.of("colpk", int.class),
-                                                               Placeholders.of("colA_numeric", BigDecimal.class),
-                                                               Placeholders.of("colB_numeric_p6", BigDecimal.class),
-                                                               Placeholders.of("colC_numeric_p6_s4", BigDecimal.class),
-                                                               Placeholders.of("col1_timestamp", LocalDateTime.class),
-                                                               Placeholders.of("col2_timestamp_0", LocalDateTime.class),
-                                                               Placeholders.of("col3_timestamp_5", LocalDateTime.class),
-                                                               Placeholders.of("col4_date", LocalDate.class),
-                                                               Placeholders.of("col5_time_3", LocalTime.class),
-                                                               Placeholders.of("col8_timestamptz_5", OffsetDateTime.class),
-                                                               Placeholders.of("col9_timetz_6", OffsetTime.class),
-                                                               Placeholders.of("col0_varchar_11", String.class)).get();
-                     Transaction transaction = sqlClient.createTransaction().await()) {
-                }
-                System.out.println("no interval success");
-            }
-            if (cmd.hasOption("r")) {
-                String sql = "INSERT INTO new_type_test (colpk, colA_numeric, colB_numeric_p6, colC_numeric_p6_s4, col1_timestamp, col2_timestamp_0, col3_timestamp_5, col4_date, col5_time_3, col0_varchar_11) VALUES (:colpk, :colA_numeric, :colB_numeric_p6, :colC_numeric_p6_s4, :col1_timestamp, :col2_timestamp_0, :col3_timestamp_5, :col4_date, :col5_time_3, :col0_varchar_11)";
-                try (var preparedStatement = sqlClient.prepare(sql,
-                                                               Placeholders.of("colpk", int.class),
-                                                               Placeholders.of("colA_numeric", BigDecimal.class),
-                                                               Placeholders.of("colB_numeric_p6", BigDecimal.class),
-                                                               Placeholders.of("colC_numeric_p6_s4", BigDecimal.class),
-                                                               Placeholders.of("col1_timestamp", LocalDateTime.class),
-                                                               Placeholders.of("col2_timestamp_0", LocalDateTime.class),
-                                                               Placeholders.of("col3_timestamp_5", LocalDateTime.class),
-                                                               Placeholders.of("col4_date", LocalDate.class),
-                                                               Placeholders.of("col5_time_3", LocalTime.class),
-                                                               Placeholders.of("col0_varchar_11", String.class)).get();
-                     Transaction transaction = sqlClient.createTransaction().await()) {
-                }
-                System.out.println("no zone success");
-            }
-            if (cmd.hasOption("s")) {
-                String sql = "INSERT INTO new_type_test (colpk, colA_numeric, colB_numeric_p6, colC_numeric_p6_s4, col1_timestamp, col2_timestamp_0, col3_timestamp_5, col4_date, col5_time_3, col0_varchar_11) VALUES (:colpk, :colA_numeric, :colB_numeric_p6, :colC_numeric_p6_s4, :col1_timestamp, :col2_timestamp_0, :col3_timestamp_5, :col4_date, :col5_time_3, :col0_varchar_11)";
-                try (var preparedStatement = sqlClient.prepare(sql,
-                                                               Placeholders.of("colpk", int.class),
-                                                               Placeholders.of("colA_numeric", BigDecimal.class),
-                                                               Placeholders.of("colB_numeric_p6", BigDecimal.class),
-                                                               Placeholders.of("colC_numeric_p6_s4", BigDecimal.class),
-                                                               Placeholders.of("col1_timestamp", LocalDateTime.class),
-                                                               Placeholders.of("col2_timestamp_0", LocalDateTime.class),
-                                                               Placeholders.of("col3_timestamp_5", LocalDateTime.class),
-                                                               Placeholders.of("col4_date", LocalDate.class),
-                                                               Placeholders.of("col5_time_3", LocalTime.class),
-                                                               Placeholders.of("col0_varchar_11", String.class)).get();
-                     Transaction transaction = sqlClient.createTransaction().await()) {
-                }
-                System.out.println("no date time success");
-            }
-            if (cmd.hasOption("t")) {
-                String sql = "INSERT INTO new_type_test (colpk, colA_numeric, colB_numeric_p6, colC_numeric_p6_s4, col0_varchar_11) VALUES (:colpk, :colA_numeric, :colB_numeric_p6, :colC_numeric_p6_s4, :col0_varchar_11)";
-                try (var preparedStatement = sqlClient.prepare(sql,
-                                                               Placeholders.of("colpk", int.class),
-                                                               Placeholders.of("colA_numeric", BigDecimal.class),
-                                                               Placeholders.of("colB_numeric_p6", BigDecimal.class),
-                                                               Placeholders.of("colC_numeric_p6_s4", BigDecimal.class),
-                                                               Placeholders.of("col0_varchar_11", String.class)).get();
-                     Transaction transaction = sqlClient.createTransaction().await()) {
-                }
-                System.out.println("no timestamp success");
-            }
-            if (cmd.hasOption("u")) {
-                String sql = "INSERT INTO new_type_test (colpk, col0_varchar_11) VALUES (:colpk, :col0_varchar_11)";
-                try (var preparedStatement = sqlClient.prepare(sql,
-                                                               Placeholders.of("colpk", int.class),
-                                                               Placeholders.of("col0_varchar_11", String.class)).get();
-                     Transaction transaction = sqlClient.createTransaction().await()) {
-                }
-                System.out.println("only int and char success");
-            }
-            
+
         } catch (IOException | InterruptedException | TimeoutException | ServerException | ParseException e) {
-            System.out.println(e);
+            e.printStackTrace();
+        }
+    }
+
+    private static void printResultset(ResultSet resultSet) throws InterruptedException, IOException, ServerException {
+        int count = 1;
+        
+        while (resultSet.nextRow()) {
+            System.out.println("---- ( " + count + " )----");
+            count++;
+            int columnIndex = 0;
+            var metadata = resultSet.getMetadata().getColumns();
+            while (resultSet.nextColumn()) {
+                if (!resultSet.isNull()) {
+                    switch (metadata.get(columnIndex).getAtomType()) {
+                    case INT4:
+                        System.out.println(resultSet.fetchInt4Value());
+                        break;
+                    case INT8:
+                        System.out.println(resultSet.fetchInt8Value());
+                        break;
+                    case FLOAT4:
+                        System.out.println(resultSet.fetchFloat4Value());
+                        break;
+                    case FLOAT8:
+                        System.out.println(resultSet.fetchFloat8Value());
+                        break;
+                    case CHARACTER:
+                        System.out.println(resultSet.fetchCharacterValue());
+                        break;
+
+                    case DECIMAL:
+                        System.out.println(resultSet.fetchDecimalValue());
+                        break;
+                    case DATE:
+                        System.out.println(resultSet.fetchDateValue());
+                        break;
+                    case TIME_POINT:
+                        System.out.println(resultSet.fetchTimePointValue());
+                        break;
+                        
+                    default:
+                        throw new IOException("the column type is invalid");
+                    }
+                } else {
+                    System.out.println("the column is NULL");
+                }
+                columnIndex++;
+            }
         }
     }
 }
-
-// CREATE TABLE new_type_test (
-//     colA_numeric        NUMERIC,
-//     colB_numeric_p6     NUMERIC (6),
-//     colC_numeric_p6_s4  NUMERIC (6, 4),
-//     col1_timestamp      TIMESTAMP,
-//     col2_timestamp_0    TIMESTAMP (0),
-//     col3_timestamp_5    TIMESTAMP (5),
-//     col4_date           DATE,
-//     col5_time_3         TIME (3),
-//     col6_interval_2     INTERVAL (2),
-//     col7_interval_S_4   INTERVAL SECOND (4),
-//     col8_timestamptz_5  TIMESTAMP (5) with time zone,
-//     col9_timetz_6       TIME (6) with time zone,
-//     col0_varchar_11     VARCHAR (11)
-// ) tablespace tsurugi;
