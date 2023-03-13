@@ -19,7 +19,7 @@ jobs:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GHCR_PAT }}
       volumes:
-        - /work/docker-cache/.gradle:/root/.gradle
+        - ${{ vars.gradle_cache_dir }}:/root/.gradle
     defaults:
       run:
         shell: bash
@@ -28,6 +28,13 @@ jobs:
       GPR_KEY: ${{ secrets.GHCR_PAT }}
 
     steps:
+      - id: Setup_Java
+        name: Setup_Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
       - id: Checkout
         name: Checkout
         uses: actions/checkout@v3
