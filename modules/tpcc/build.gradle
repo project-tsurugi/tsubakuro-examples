@@ -16,3 +16,16 @@ tasks.register('runTpcc', JavaExec) {
 
     dependsOn copyNativeLib
 }
+
+startScripts {
+    applicationName = 'tpcc'
+    mainClass = 'com.tsurugidb.tsubakuro.examples.tpcc.Main'
+    applicationDefaultJvmArgs = [
+        '-Dcom.tsurugidb.tsubakuro.jniverify=false',
+        '-Dtsurugi.dbname=ipc:tateyama'
+    ]
+}
+
+distTar {
+    archiveName = "${project.name}.tar"
+}

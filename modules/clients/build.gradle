@@ -6,7 +6,7 @@ dependencies {
     implementation 'commons-cli:commons-cli:1.4'
 }
 
-tasks.register('run', JavaExec) {
+tasks.register('runExample', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'com.tsurugidb.tsubakuro.examples.Main'
 
