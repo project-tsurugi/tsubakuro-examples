@@ -27,5 +27,5 @@ startScripts {
 }
 
 distTar {
-    archiveName = "${project.name}.tar"
+    archiveFileName = "${project.name}.tar"
 }
