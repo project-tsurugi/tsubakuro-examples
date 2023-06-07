@@ -5,9 +5,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -24,14 +21,27 @@ import com.tsurugidb.tsubakuro.sql.SqlClient;
 
 public final class Main {
     private static String url = System.getProperty("tsurugi.dbname");
-    private static List<CsvReader> list = new ArrayList<CsvReader>();
     private static int warehouses = 1;
     private static String rootDirectory = "db";
     
+    private static final TableAccessor itemTable = new ItemAccessor();
+    private static final TableAccessor[] tables = {
+        new WarehouseAccessor(),
+        new DistrictAccessor(),
+        new CustomerAccessor(),
+        new OrdersAccessor(),
+        new NewOrderAccessor(),
+        new OrderLineAccessor(),
+        new StockAccessor(),
+        //        new HistoryAccessor()
+    };
+    private static Tasks tasks = new Tasks();
+    private static List<Worker> workers = new ArrayList<>();
+
     private Main() {
     }
 
-    public static void main(String[] args) {
+    private static void parseArguments(String[] args) {
         Options options = new Options();
 
         options.addOption(Option.builder("w").argName("warehouses").hasArg().desc("The number of warehouse.").build());
@@ -51,30 +61,54 @@ public final class Main {
         } catch (ParseException e) {
             System.err.println("cmd parser failed." + e);
         }
+    }
+
+    public static void main(String[] args) {
+        parseArguments(args);
         
         try {
-            list.add( new CsvReader( rootDirectory, Tables.itemTable(), 1) );
+            tasks.add(itemTable, new CsvReader(rootDirectory, itemTable.tableName(), 1));
         } catch (IOException e) {
             System.out.printf("can't find data files in %s", rootDirectory);
             return;
         }
-        
         long index = 1;
         try {
-            for (index = 1; index <= warehouses; index++ ) {
-                for (String table : Tables.tables()) {
-                    list.add( new CsvReader( rootDirectory, table, index) );
+            for (index = 1; index <= warehouses; index++) {
+                for (var table : tables) {
+                    tasks.add(table, new CsvReader(rootDirectory, table.tableName(), index));
                 }
             }
         } catch (IOException e) {
             System.out.printf("csv files for index %d does not exist, so limit to %d.", index, index - 1);
         }
-        try {
-            for (var csvReader : list) {
-                csvReader.run();
+
+        boolean exhausted = false;
+        while (!exhausted) {
+            try {
+                Worker w = new Worker(url, tasks);
+                workers.add(w);
+            } catch (IOException e) {
+                exhausted = true;
             }
-        } catch (IOException e) {
-            System.out.println(e);
+        }
+
+        for (var w : workers) {
+            w.start();
+        }
+
+        boolean success = true;
+        for (var w : workers) {
+            try {
+                w.join();
+                success &= w.success();
+            } catch (InterruptedException e) {
+                System.err.println(e);
+            }
+        }
+
+        if (!success) {
+            System.err.println("something wrong in loading TPC-C initial data");
         }
     }
 }

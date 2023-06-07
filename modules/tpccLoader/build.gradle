@@ -6,6 +6,10 @@ dependencies {
     implementation 'commons-cli:commons-cli:1.4'
 }
 
+compileJava {
+    options.compilerArgs << '-Xlint:unchecked'
+}
+
 tasks.register('runTpccLoader', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'com.tsurugidb.tsubakuro.examples.tpccLoader.Main'
