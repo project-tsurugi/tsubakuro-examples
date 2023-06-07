@@ -13,11 +13,13 @@ import com.tsurugidb.tsubakuro.exception.ServerException;
 final class HistoryAccessor implements TableAccessor {
     private final String tableName = "HISTORY";
     private final String createTable = "CREATE TABLE ITEM (i_id INT NOT NULL, i_name VARCHAR(24) NOT NULL, i_price DOUBLE NOT NULL, i_data VARCHAR(50) NOT NULL, PRIMARY KEY(i_id))";
-    private final String insert = "INSERT INTO HISTORY (h_c_id, h_c_d_id, h_c_w_id, h_w_id, h_d_id, h_date, h_amount, h_data) VALUES (:c_id, :c_d_id, :c_w_id, :c_w_id, :c_d_id, :timestamp, :h_amount, :h_data)";
+    private final String insert = "INSERT INTO HISTORY (h_c_id, h_c_d_id, h_c_w_id, h_d_id, h_w_id, h_date, h_amount, h_data) VALUES (:c_id, :c_d_id, :c_w_id, :d_id, :w_id, :timestamp, :h_amount, :h_data)";
     private final SqlRequest.Placeholder[] placeholders = {
         Placeholders.of("c_id", long.class),
         Placeholders.of("c_d_id", long.class),
         Placeholders.of("c_w_id", long.class),
+        Placeholders.of("d_id", long.class),
+        Placeholders.of("w_id", long.class),
         Placeholders.of("timestamp", String.class),
         Placeholders.of("h_amount", double.class),
         Placeholders.of("h_data",  String.class) };
@@ -50,9 +52,11 @@ final class HistoryAccessor implements TableAccessor {
                                              Parameters.of("c_id", Long.parseLong(columns[0])),
                                              Parameters.of("c_d_id", Long.parseLong(columns[1])),
                                              Parameters.of("c_w_id", Long.parseLong(columns[2])),
-                                             Parameters.of("timestamp", columns[3]),
-                                             Parameters.of("h_amount", Double.parseDouble(columns[4])),
-                                             Parameters.of("h_data", columns[5])).get();
+                                             Parameters.of("d_id", Long.parseLong(columns[3])),
+                                             Parameters.of("w_id", Long.parseLong(columns[4])),
+                                             Parameters.of("timestamp", columns[5]),
+                                             Parameters.of("h_amount", Double.parseDouble(columns[6])),
+                                             Parameters.of("h_data", columns[7])).get();
             } while (true);
             transaction.commit().get();
         } catch (ServerException | InterruptedException e) {

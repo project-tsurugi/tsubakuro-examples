@@ -33,7 +33,7 @@ public final class Main {
         new NewOrderAccessor(),
         new OrderLineAccessor(),
         new StockAccessor(),
-        //        new HistoryAccessor()
+        new HistoryAccessor()
     };
     private static Tasks tasks = new Tasks();
     private static List<Worker> workers = new ArrayList<>();
