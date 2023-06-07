@@ -21,7 +21,7 @@ import com.tsurugidb.tsubakuro.sql.SqlClient;
 
 public final class Main {
     private static String url = System.getProperty("tsurugi.dbname");
-    private static int warehouses = 1;
+    private static int warehouses = Integer.MAX_VALUE;
     private static String rootDirectory = "db";
     
     private static final TableAccessor itemTable = new ItemAccessor();
@@ -72,7 +72,7 @@ public final class Main {
             System.out.printf("can't find data files in %s", rootDirectory);
             return;
         }
-        long index = 1;
+        int index = 1;
         try {
             for (index = 1; index <= warehouses; index++) {
                 for (var table : tables) {
@@ -80,7 +80,10 @@ public final class Main {
                 }
             }
         } catch (IOException e) {
-            System.out.printf("csv files for index %d does not exist, so limit to %d.", index, index - 1);
+            if (warehouses != Integer.MAX_VALUE) {
+                System.out.printf("csv files for index %d does not exist, so limit to %d.", index, index - 1);
+            }
+            warehouses = index - 1;
         }
 
         boolean exhausted = false;
