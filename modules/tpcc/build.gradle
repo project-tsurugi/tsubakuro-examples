@@ -27,5 +27,7 @@ startScripts {
 }
 
 distTar {
-    archiveFileName = "${project.name}.tar"
+    archiveFileName = "${project.name}.tar.gz"
+    archiveExtension = 'tar.gz'
+    compression = Compression.GZIP
 }
