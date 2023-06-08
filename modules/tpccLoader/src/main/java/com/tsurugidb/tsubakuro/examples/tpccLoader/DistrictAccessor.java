@@ -29,7 +29,7 @@ final class DistrictAccessor implements TableAccessor {
 
     DistrictAccessor() {
     }
-    
+
     public String tableName() {
         return tableName;
     }

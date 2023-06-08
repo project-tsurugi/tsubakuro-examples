@@ -23,7 +23,8 @@ public final class Main {
     private static String url = System.getProperty("tsurugi.dbname");
     private static int warehouses = Integer.MAX_VALUE;
     private static String rootDirectory = "db";
-    
+    private static boolean verbose = false;
+
     private static final TableAccessor itemTable = new ItemAccessor();
     private static final TableAccessor[] tables = {
         new WarehouseAccessor(),
@@ -46,6 +47,7 @@ public final class Main {
 
         options.addOption(Option.builder("w").argName("warehouses").hasArg().desc("The number of warehouse.").build());
         options.addOption(Option.builder("d").argName("root_directory").hasArg().desc("root directory of table data.").build());
+        options.addOption(Option.builder("v").argName("verbose").desc("print verbose message.").build());
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = null;
 
@@ -58,6 +60,9 @@ public final class Main {
             if (cmd.hasOption("d")) {
                 rootDirectory = cmd.getOptionValue("d");
             }
+            if (cmd.hasOption("v")) {
+                verbose = true;
+            }
         } catch (ParseException e) {
             System.err.println("cmd parser failed." + e);
         }
@@ -65,9 +70,9 @@ public final class Main {
 
     public static void main(String[] args) {
         parseArguments(args);
-        
+
         try {
-            tasks.add(itemTable, new CsvReader(rootDirectory, itemTable.tableName(), 1));
+            tasks.add(itemTable, new CsvReader(rootDirectory, itemTable.tableName(), 1, verbose));
         } catch (IOException e) {
             System.out.printf("can't find data files in %s", rootDirectory);
             return;
@@ -76,12 +81,14 @@ public final class Main {
         try {
             for (index = 1; index <= warehouses; index++) {
                 for (var table : tables) {
-                    tasks.add(table, new CsvReader(rootDirectory, table.tableName(), index));
+                    tasks.add(table, new CsvReader(rootDirectory, table.tableName(), index, verbose));
                 }
             }
         } catch (IOException e) {
             if (warehouses != Integer.MAX_VALUE) {
                 System.out.printf("csv files for index %d does not exist, so limit to %d.", index, index - 1);
+            } else if (verbose) {
+                System.out.printf("the number of warehouses is %d.", index - 1);
             }
             warehouses = index - 1;
         }

@@ -20,7 +20,7 @@ class Tasks {
             return csvReader;
         }
     }
-    
+
     Tasks() {
     }
 

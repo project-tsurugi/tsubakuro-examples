@@ -15,7 +15,7 @@ class Worker extends Thread {
     private final SqlClient sqlClient;
     private final Tasks tasks;
     private boolean success;
-    
+
     Worker(String url, Tasks tasks) throws IOException {
         try {
             session = SessionBuilder.connect(url)
