@@ -11,7 +11,7 @@ tasks.register('runExample', JavaExec) {
     mainClass = 'com.tsurugidb.tsubakuro.examples.Main'
 
     systemProperty 'com.tsurugidb.tsubakuro.jnilib', "${buildDir}/native/libtsubakuro.so"
-    systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'ipc:tateyama'
+    systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'ipc:tsurugi'
 
     systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
     systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'
@@ -30,7 +30,7 @@ tasks.register('runDataStore', JavaExec) {
     mainClass = 'com.tsurugidb.tsubakuro.examples.datastore.Main'
 
     systemProperty 'com.tsurugidb.tsubakuro.jnilib', "${buildDir}/native/libtsubakuro.so"
-    systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'ipc:tateyama'
+    systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'ipc:tsurugi'
 
     systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
     systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'
@@ -45,7 +45,7 @@ tasks.register('runDiagnostic', JavaExec) {
     mainClass = 'com.tsurugidb.tsubakuro.examples.diagnostics.JMXClient'
 
     systemProperty 'com.tsurugidb.tsubakuro.jnilib', "${buildDir}/native/libtsubakuro.so"
-    systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'ipc:tateyama'
+    systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'ipc:tsurugi'
 
     systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
     systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'

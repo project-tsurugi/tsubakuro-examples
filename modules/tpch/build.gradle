@@ -11,7 +11,7 @@ tasks.register('runTpch', JavaExec) {
     mainClass = 'com.tsurugidb.tsubakuro.examples.tpch.Main'
 
     systemProperty 'com.tsurugidb.tsubakuro.jnilib', "${buildDir}/native/libtsubakuro.so"
-    systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'ipc:tateyama'
+    systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'ipc:tsurugi'
 
     systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
     systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'
