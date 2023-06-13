@@ -16,7 +16,7 @@ public final class Main {
     }
 
     // set dbname as follows
-    // -Ptsurugi.dbname=ipc:tateyama or
+    // -Ptsurugi.dbname=ipc:tsurugi or
     // -Ptsurugi.dbname=tcp://localhost:12345
     // when run this example by `./gradlew run` command
     private static String url = System.getProperty("tsurugi.dbname");
