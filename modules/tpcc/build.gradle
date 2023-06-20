@@ -7,6 +7,7 @@ tasks.register('runTpcc', JavaExec) {
     mainClass = 'com.tsurugidb.tsubakuro.examples.tpcc.Main'
 
     systemProperty 'com.tsurugidb.tsubakuro.jnilib', "${buildDir}/native/libtsubakuro.so"
+    systemProperty 'com.tsurugidb.tsubakuro.jniverify', 'false'
     systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'ipc:tsurugi'
 
     systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
