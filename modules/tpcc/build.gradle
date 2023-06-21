@@ -31,4 +31,44 @@ distTar {
     archiveFileName = "${project.name}.tar.gz"
     archiveExtension = 'tar.gz'
     compression = Compression.GZIP
+    duplicatesStrategy 'exclude'
+}
+distZip.enabled = false
+
+configurations {
+	loaderContext
+}
+
+dependencies {
+	loaderContext project(path: ':tpccLoader', configuration: 'tpccLoaderContent')
+}
+
+task copyFromLoaderProject(type:Copy, dependsOn: configurations.loaderContext) {
+	from configurations.loaderContext.collect{ tarTree(it) }
+	into "$buildDir/extracted"
+}
+
+task syncLoaderContent(type:Sync, dependsOn: copyFromLoaderProject) {
+	from "$buildDir/extracted/tpccLoader"
+	into "$buildDir/distAggregate"
+}
+
+if (project.hasProperty('tpccDataGenPath')) {
+    task copyTpccDataGen(type:Copy) {
+        from project.file("${tpccDataGenPath}")
+        into "$buildDir/tpccDataGen"
+    }
+}
+
+distributions {
+	main {
+		contents {
+			from syncLoaderContent
+            if (project.hasProperty('tpccDataGenPath')) {
+                into('bin') {
+                    from copyTpccDataGen
+                }
+            }
+		}
+	}
 }

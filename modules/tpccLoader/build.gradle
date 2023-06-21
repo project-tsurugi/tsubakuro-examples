@@ -38,3 +38,12 @@ startScripts {
 distTar {
     archiveFileName = "${project.name}.tar"
 }
+distZip.enabled = false
+
+configurations {
+	tpccLoaderContent
+}
+
+artifacts {
+	tpccLoaderContent distTar
+}
