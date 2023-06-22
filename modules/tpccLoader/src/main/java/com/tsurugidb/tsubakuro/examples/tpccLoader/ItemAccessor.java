@@ -12,9 +12,8 @@ import com.tsurugidb.tsubakuro.exception.ServerException;
 
 final class ItemAccessor implements TableAccessor {
     private final String tableName = "ITEM";
-    private final String createTable = "CREATE TABLE ITEM (i_id INT NOT NULL, i_name VARCHAR(24) NOT NULL, i_price DOUBLE NOT NULL, i_data VARCHAR(50) NOT NULL, PRIMARY KEY(i_id))";
-    //    private final String insert = "INSERT INTO ITEM (i_id, i_name, i_price, i_data) VALUES (:i_id, :i_name, :i_price, :i_data)";
-    private final String insert = "INSERT INTO ITEM (i_id, i_name, i_price, i_data, i_im_id) VALUES (:i_id, :i_name, :i_price, :i_data, 0)";
+    private final String createTable = "CREATE TABLE ITEM (i_id INT NOT NULL, i_im_id INT, i_name VARCHAR(24) NOT NULL, i_price DOUBLE NOT NULL, i_data VARCHAR(50) NOT NULL, PRIMARY KEY(i_id))";
+    private final String insert = "INSERT INTO ITEM (i_id, i_name, i_price, i_data) VALUES (:i_id, :i_name, :i_price, :i_data)";
     private final SqlRequest.Placeholder[] placeholders = {
         Placeholders.of("i_id", long.class),
         Placeholders.of("i_name", String.class),

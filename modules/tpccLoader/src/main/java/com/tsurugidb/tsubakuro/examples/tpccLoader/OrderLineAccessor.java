@@ -12,7 +12,7 @@ import com.tsurugidb.tsubakuro.exception.ServerException;
 
 final class OrderLineAccessor implements TableAccessor {
     private final String tableName = "ORDER_LINE";
-    private final String createTable = "CREATE TABLE ORDER_LINE (ol_o_id INT NOT NULL, ol_d_id INT NOT NULL, ol_w_id INT NOT NULL, ol_number INT NOT NULL, ol_i_id INT NOT NULL, ol_supply_w_id INT NOT NULL, ol_delivery_d CHAR(24), ol_quantity INT NOT NULL, ol_amount DOUBLE NOT NULL, ol_dist_info CHAR(24) NOT NULL, PRIMARY KEY(ol_w_id, ol_d_id, ol_o_id, ol_number))";
+    private final String createTable = "CREATE TABLE ORDER_LINE (ol_o_id INT NOT NULL, ol_d_id INT NOT NULL, ol_w_id INT NOT NULL, ol_number INT NOT NULL, ol_i_id INT NOT NULL, ol_supply_w_id INT NOT NULL, ol_delivery_d CHAR(25), ol_quantity INT NOT NULL, ol_amount DOUBLE NOT NULL, ol_dist_info CHAR(24) NOT NULL, PRIMARY KEY(ol_w_id, ol_d_id, ol_o_id, ol_number))";
     private final String insert = "INSERT INTO ORDER_LINE (ol_o_id, ol_d_id, ol_w_id, ol_number, ol_i_id, ol_supply_w_id, ol_quantity, ol_amount, ol_dist_info, ol_delivery_d) VALUES (:ol_o_id, :ol_d_id, :ol_w_id, :ol_number, :ol_i_id, :ol_supply_w_id, :ol_quantity, :ol_amount, :ol_dist_info, :ol_delivery_d)";
     private final SqlRequest.Placeholder[] placeholders = {
         Placeholders.of("ol_o_id", long.class),

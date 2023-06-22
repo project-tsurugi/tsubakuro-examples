@@ -72,6 +72,15 @@ public final class Main {
         parseArguments(args);
 
         try {
+            var createTableWorker = new CreateTableWorker(url);
+            createTableWorker.createTables(itemTable, tables);
+        } catch (IOException e) {
+            System.err.println("something wrong in creating TPC-C tables");
+            System.err.println(e);
+            return;
+        }            
+
+        try {
             tasks.add(itemTable, new CsvReader(rootDirectory, itemTable.tableName(), 1, verbose));
         } catch (IOException e) {
             System.out.printf("can't find data files in %s", rootDirectory);
