@@ -52,3 +52,18 @@ tasks.register('runDiagnostic', JavaExec) {
     systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
     systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
 }
+
+tasks.register('runBook', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tsurugidb.tsubakuro.examples.book.Main'
+
+    systemProperty 'com.tsurugidb.tsubakuro.jnilib', "${buildDir}/native/libtsubakuro.so"
+    systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'ipc:tsurugi'
+
+    systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
+    systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'
+    systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
+    systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
+
+    dependsOn copyNativeLib
+}
