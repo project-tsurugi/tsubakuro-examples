@@ -24,6 +24,7 @@ public final class Main {
     private static int warehouses = Integer.MAX_VALUE;
     private static String rootDirectory = "db";
     private static boolean verbose = false;
+    private static int maxParallelism = 0;
 
     private static final TableAccessor itemTable = new ItemAccessor();
     private static final TableAccessor[] tables = {
@@ -48,6 +49,8 @@ public final class Main {
         options.addOption(Option.builder("w").argName("warehouses").hasArg().desc("The number of warehouse.").build());
         options.addOption(Option.builder("d").argName("root_directory").hasArg().desc("root directory of table data.").build());
         options.addOption(Option.builder("v").argName("verbose").desc("print verbose message.").build());
+        options.addOption(Option.builder("p").argName("parallelism").hasArg().desc("max worker threads.").build());
+
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = null;
 
@@ -62,6 +65,9 @@ public final class Main {
             }
             if (cmd.hasOption("v")) {
                 verbose = true;
+            }
+            if (cmd.hasOption("p")) {
+                maxParallelism = Integer.parseInt(cmd.getOptionValue("p"));
             }
         } catch (ParseException e) {
             System.err.println("cmd parser failed." + e);
@@ -86,21 +92,35 @@ public final class Main {
             }
         } catch (IOException e) {
             if (warehouses != Integer.MAX_VALUE) {
-                System.out.printf("csv files for index %d does not exist, so limit to %d.", index, index - 1);
+                System.out.printf("csv files for index %d does not exist, so limit to %d.%n", index, index - 1);
             } else if (verbose) {
-                System.out.printf("the number of warehouses is %d.", index - 1);
+                System.out.printf("the number of warehouses is %d.%n", index - 1);
             }
             warehouses = index - 1;
         }
 
-        boolean exhausted = false;
-        while (!exhausted) {
-            try {
-                Worker w = new Worker(url, tasks);
-                workers.add(w);
-            } catch (IOException e) {
-                exhausted = true;
+        if (maxParallelism <= 0) {
+            boolean exhausted = false;
+            while (!exhausted) {
+                try {
+                    Worker w = new Worker(url, tasks);
+                    workers.add(w);
+                } catch (IOException e) {
+                    exhausted = true;
+                }
             }
+        } else {
+            for (int i = 1; i <= maxParallelism; i++) {
+                try {
+                    Worker w = new Worker(url, tasks);
+                    workers.add(w);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        if (verbose) {
+            System.out.printf("the number of workers is %d.%n", workers.size());
         }
 
         for (var w : workers) {
