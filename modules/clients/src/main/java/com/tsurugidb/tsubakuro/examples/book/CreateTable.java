@@ -11,14 +11,12 @@ import com.tsurugidb.tsubakuro.sql.Placeholders;
 import com.tsurugidb.tsubakuro.sql.Parameters;
 
 public final class CreateTable {
-    static private String sql = "CREATE TABLE foo (bar1 INT NOT NULL, bar2 DOUBLE, bar3 VARCHAR(20), PRIMARY KEY(bar1))";
-
     public static void doCreateTable(String url) throws IOException, ServerException, InterruptedException {
         try (Session session = SessionBuilder.connect(url).create();
              SqlClient sqlClient = SqlClient.attach(session);
-             Transaction transaction = sqlClient.createTransaction().await()) {
+             Transaction transaction = sqlClient.createTransaction().get()) {
 
-            transaction.executeStatement(sql).get();
+            transaction.executeStatement("CREATE TABLE foo (bar1 INT, bar2 DOUBLE, bar3 VARCHAR(20), PRIMARY KEY(bar1))").get();
             transaction.commit().get();
         }
     }

@@ -6,25 +6,24 @@ import com.tsurugidb.tsubakuro.exception.ServerException;
 import com.tsurugidb.tsubakuro.common.Session;
 import com.tsurugidb.tsubakuro.common.SessionBuilder;
 import com.tsurugidb.tsubakuro.sql.SqlClient;
+import com.tsurugidb.tsubakuro.sql.Transaction;
 import com.tsurugidb.tsubakuro.sql.ResultSet;
 
 public final class Select {
-    private static final String sql = "SELECT * FROM foo";
-    
     public static void doSelect(String url) throws IOException, ServerException, InterruptedException {
         try (
              Session session = SessionBuilder.connect(url).create();
              SqlClient sqlClient = SqlClient.attach(session);
-             var transaction = sqlClient.createTransaction().get();) {
+             Transaction transaction = sqlClient.createTransaction().get();) {
 
-            try (var resultSet = transaction.executeQuery(sql).get();) {
-                printResultset(resultSet);
+            try (ResultSet resultSet = transaction.executeQuery("SELECT * FROM foo").get();) {
+                doSomeWorkUsingResultset(resultSet);
             }
-            transaction.commit().await();
+            transaction.commit().get();
         }
     }
 
-    private static void printResultset(ResultSet resultSet) throws InterruptedException, IOException, ServerException {
+    private static void doSomeWorkUsingResultset(ResultSet resultSet) throws InterruptedException, IOException, ServerException {
         int count = 0;
         var metadata = resultSet.getMetadata().getColumns();
 
