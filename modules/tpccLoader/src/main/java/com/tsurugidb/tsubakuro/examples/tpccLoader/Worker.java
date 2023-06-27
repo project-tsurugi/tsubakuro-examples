@@ -18,10 +18,10 @@ class Worker extends Thread {
 
     Worker(String url, Tasks tasks) throws IOException {
         try {
-            session = SessionBuilder.connect(url)
+            this.session = SessionBuilder.connect(url)
                 .withCredential(new UsernamePasswordCredential("user", "pass"))
                 .create(10, TimeUnit.SECONDS);
-            sqlClient = SqlClient.attach(session);
+            this.sqlClient = SqlClient.attach(session);
             this.tasks = tasks;
         } catch (IOException | ServerException | InterruptedException | TimeoutException e) {
             throw new IOException(e);
