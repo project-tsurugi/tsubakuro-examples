@@ -12,7 +12,7 @@ import com.tsurugidb.tsubakuro.exception.ServerException;
 
 final class WarehouseAccessor implements TableAccessor {
     private final String tableName = "WAREHOUSE";
-    private final String createTable = "CREATE TABLE WAREHOUSE (w_id INT NOT NULL, w_name VARCHAR(10) NOT NULL, w_street_1 VARCHAR(20) NOT NULL, w_street_2 VARCHAR(20) NOT NULL, w_city VARCHAR(20) NOT NULL, w_state CHAR(2) NOT NULL, w_zip CHAR(9) NOT NULL, w_tax DOUBLE NOT NULL, w_ytd DOUBLE NOT NULL, PRIMARY KEY(w_id))";
+    private final String createTable = "CREATE TABLE WAREHOUSE (w_id BIGINT NOT NULL, w_name VARCHAR(10) NOT NULL, w_street_1 VARCHAR(20) NOT NULL, w_street_2 VARCHAR(20) NOT NULL, w_city VARCHAR(20) NOT NULL, w_state CHAR(2) NOT NULL, w_zip CHAR(9) NOT NULL, w_tax DOUBLE NOT NULL, w_ytd DOUBLE NOT NULL, PRIMARY KEY(w_id))";
     private final String insert = "INSERT INTO WAREHOUSE (w_id, w_name, w_street_1, w_street_2, w_city, w_state, w_zip, w_tax, w_ytd) VALUES (:w_id, :w_name, :w_street_1, :w_street_2, :w_city, :w_state, :w_zip, :w_tax, :w_ytd)";
     private final SqlRequest.Placeholder[] placeholders = {
         Placeholders.of("w_id", long.class),
