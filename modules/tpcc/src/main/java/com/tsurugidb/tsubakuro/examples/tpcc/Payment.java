@@ -29,6 +29,7 @@ public class Payment {
     PreparedStatement prepared8;
     PreparedStatement prepared9;
     PreparedStatement prepared10;
+    PreparedStatement prepared11;
 
     long warehouses;
     long paramsWid;
@@ -140,6 +141,17 @@ public class Payment {
             Placeholders.of("c_w_id", long.class),
             Placeholders.of("c_d_id", long.class),
             Placeholders.of("c_id", long.class)).get();
+
+        String sql11 = "INSERT INTO HISTORY (h_c_d_id, h_c_w_id, h_c_id, h_d_id, h_w_id, h_date, h_amount, h_data) VALUES (:c_d_id, :c_w_id, :c_id, :d_id, :w_id, :datetime, :h_amount, :h_data)";
+        prepared11 = sqlClient.prepare(sql11,
+            Placeholders.of("c_d_id", long.class),
+            Placeholders.of("c_w_id", long.class),
+            Placeholders.of("c_id", long.class),
+            Placeholders.of("d_id", long.class),
+            Placeholders.of("w_id", long.class),
+            Placeholders.of("datetime", String.class),
+            Placeholders.of("h_amount", double.class),
+            Placeholders.of("h_data", String.class)).get();
     }
 
     static String dateStamp() {
@@ -396,7 +408,28 @@ public class Payment {
                     continue;
                 }
             }
-    
+
+            String hData = String.format("%10s%10s    ", (wName.length() > 10) ? wName.substring(0, 10) : wName, (dName.length() > 10) ? dName.substring(0, 10) : dName);
+            try {
+                // INSERT INTO HISTORY (h_c_d_id, h_c_w_id, h_c_id, h_d_id, h_w_id, h_date, h_amount, h_data) VALUES (:c_d_id, :c_w_id, :c_id, :d_id, :w_id, :datetime, :h_amount, :h_data)
+                var future11 = transaction.executeStatement(prepared11,
+                    Parameters.of("c_d_id", (long) paramsDid),
+                    Parameters.of("c_w_id", (long) paramsWid),
+
+                    Parameters.of("c_id", (long) cId),
+                    Parameters.of("d_id", (long) paramsDid),
+                    Parameters.of("w_id", (long) paramsWid),
+
+                    Parameters.of("datetime", paramsHdate),
+                    Parameters.of("h_amount", (double) paramsHamount),
+                    Parameters.of("h_data", hData.substring(0, 24)));
+                var result11 = future11.get();
+            } catch (ServerException e) {
+                profile.retryOnStatement.payment++;
+                rollback();
+                continue;
+            }
+
             try {
                 transaction.commit().get();
                 profile.completion.payment++;
