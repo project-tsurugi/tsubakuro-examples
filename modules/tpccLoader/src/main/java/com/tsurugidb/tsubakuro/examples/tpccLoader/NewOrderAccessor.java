@@ -12,7 +12,7 @@ import com.tsurugidb.tsubakuro.exception.ServerException;
 
 final class NewOrderAccessor implements TableAccessor {
     private final String tableName = "NEW_ORDER";
-    private final String createTable = "CREATE TABLE NEW_ORDER (no_o_id INT NOT NULL, no_d_id INT NOT NULL, no_w_id INT NOT NULL, PRIMARY KEY(no_w_id, no_d_id, no_o_id))";
+    private final String createTable = "CREATE TABLE NEW_ORDER (no_o_id BIGINT NOT NULL, no_d_id BIGINT NOT NULL, no_w_id BIGINT NOT NULL, PRIMARY KEY(no_w_id, no_d_id, no_o_id))";
     private final String insert = "INSERT INTO NEW_ORDER (no_o_id, no_d_id, no_w_id) VALUES (:no_o_id, :no_d_id, :no_w_id)";
     private final SqlRequest.Placeholder[] placeholders = {
         Placeholders.of("no_o_id", long.class),

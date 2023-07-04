@@ -12,7 +12,7 @@ import com.tsurugidb.tsubakuro.exception.ServerException;
 
 final class HistoryAccessor implements TableAccessor {
     private final String tableName = "HISTORY";
-    private final String createTable = "CREATE TABLE HISTORY (h_c_id INT, h_c_d_id INT, h_c_w_id INT, h_d_id INT, h_w_id INT, h_date CHAR(25), h_amount DOUBLE, h_data VARCHAR(24))";
+    private final String createTable = "CREATE TABLE HISTORY (h_c_id BIGINT, h_c_d_id BIGINT, h_c_w_id BIGINT, h_d_id BIGINT, h_w_id BIGINT, h_date CHAR(25), h_amount DOUBLE, h_data VARCHAR(24))";
     private final String insert = "INSERT INTO HISTORY (h_c_id, h_c_d_id, h_c_w_id, h_d_id, h_w_id, h_date, h_amount, h_data) VALUES (:c_id, :c_d_id, :c_w_id, :d_id, :w_id, :timestamp, :h_amount, :h_data)";
     private final SqlRequest.Placeholder[] placeholders = {
         Placeholders.of("c_id", long.class),

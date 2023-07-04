@@ -12,7 +12,7 @@ import com.tsurugidb.tsubakuro.exception.ServerException;
 
 final class OrdersAccessor implements TableAccessor {
     private final String tableName = "ORDERS";
-    private final String createTable = "CREATE TABLE ORDERS (o_id INT NOT NULL, o_d_id INT NOT NULL, o_w_id INT NOT NULL, o_c_id INT NOT NULL, o_entry_d CHAR(25) NOT NULL, o_carrier_id INT, o_ol_cnt INT NOT NULL, o_all_local INT NOT NULL, PRIMARY KEY(o_w_id, o_d_id, o_id))";
+    private final String createTable = "CREATE TABLE ORDERS (o_id BIGINT NOT NULL, o_d_id BIGINT NOT NULL, o_w_id BIGINT NOT NULL, o_c_id BIGINT NOT NULL, o_entry_d CHAR(25) NOT NULL, o_carrier_id BIGINT, o_ol_cnt BIGINT NOT NULL, o_all_local BIGINT NOT NULL, PRIMARY KEY(o_w_id, o_d_id, o_id))";
     private final String createIndex = "CREATE INDEX ORDERS_SECONDARY ON ORDERS (o_w_id, o_d_id, o_c_id, o_id)";
     private final String insert = "INSERT INTO ORDERS (o_id, o_c_id, o_d_id, o_w_id, o_entry_d, o_carrier_id, o_ol_cnt, o_all_local) VALUES (:o_id, :o_c_id, :o_d_id, :o_w_id, :o_entry_d, :o_carrier_id, :o_ol_cnt, :o_all_local)";
     private final SqlRequest.Placeholder[] placeholders = {

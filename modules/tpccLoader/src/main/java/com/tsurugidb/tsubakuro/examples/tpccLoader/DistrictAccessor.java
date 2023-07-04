@@ -12,7 +12,7 @@ import com.tsurugidb.tsubakuro.exception.ServerException;
 
 final class DistrictAccessor implements TableAccessor {
     private final String tableName = "DISTRICT";
-    private final String createTable = "CREATE TABLE DISTRICT (d_id INT NOT NULL, d_w_id INT NOT NULL, d_name VARCHAR(10) NOT NULL, d_street_1 VARCHAR(20) NOT NULL, d_street_2 VARCHAR(20) NOT NULL, d_city VARCHAR(20) NOT NULL, d_state CHAR(2) NOT NULL, d_zip CHAR(9) NOT NULL, d_tax DOUBLE NOT NULL, d_ytd DOUBLE NOT NULL, d_next_o_id INT NOT NULL, PRIMARY KEY(d_w_id, d_id))";
+    private final String createTable = "CREATE TABLE DISTRICT (d_id BIGINT NOT NULL, d_w_id BIGINT NOT NULL, d_name VARCHAR(10) NOT NULL, d_street_1 VARCHAR(20) NOT NULL, d_street_2 VARCHAR(20) NOT NULL, d_city VARCHAR(20) NOT NULL, d_state CHAR(2) NOT NULL, d_zip CHAR(9) NOT NULL, d_tax DOUBLE NOT NULL, d_ytd DOUBLE NOT NULL, d_next_o_id BIGINT NOT NULL, PRIMARY KEY(d_w_id, d_id))";
     private final String insert = "INSERT INTO DISTRICT (d_id, d_w_id, d_name, d_street_1, d_street_2, d_city, d_state, d_zip, d_tax, d_ytd, d_next_o_id) VALUES (:d_id, :d_w_id, :d_name, d_street_1, :d_street_2, :d_city, :d_state, :d_zip, d_tax, :d_ytd, :d_next_o_id)";
     private final SqlRequest.Placeholder[] placeholders = {
         Placeholders.of("d_id", long.class),
