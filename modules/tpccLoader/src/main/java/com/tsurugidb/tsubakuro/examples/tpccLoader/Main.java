@@ -78,6 +78,13 @@ public final class Main {
         parseArguments(args);
 
         try {
+            tasks.add(itemTable, new CsvReader(rootDirectory, itemTable.tableName(), 1, verbose));
+        } catch (IOException e) {
+            System.out.printf("can't find data files in %s", rootDirectory);
+            return;
+        }
+
+        try {
             var createTableWorker = new CreateTableWorker(url);
             createTableWorker.createTables(itemTable, tables);
         } catch (IOException e) {
@@ -86,12 +93,6 @@ public final class Main {
             return;
         }            
 
-        try {
-            tasks.add(itemTable, new CsvReader(rootDirectory, itemTable.tableName(), 1, verbose));
-        } catch (IOException e) {
-            System.out.printf("can't find data files in %s", rootDirectory);
-            return;
-        }
         int index = 1;
         try {
             for (index = 1; index <= warehouses; index++) {
