@@ -16,18 +16,33 @@ import com.tsurugidb.tsubakuro.sql.Parameters;
 public class Insert {
     final String url;
     SqlClient sqlClient;
+    Session session;
 
-    public Insert(String url) throws IOException, ServerException, InterruptedException {
+    public Insert(String url) throws IOException, ServerException, InterruptedException, TimeoutException {
         this.url = url;
+        session = SessionBuilder.connect(url)
+            .withCredential(new UsernamePasswordCredential("user", "pass"))
+            .create(10, TimeUnit.SECONDS);
+        sqlClient = SqlClient.attach(session);
+    }
+
+    public void createTable() throws IOException, ServerException, InterruptedException {
+        String createTable = "CREATE TABLE ORDERS (o_id BIGINT NOT NULL, o_d_id BIGINT NOT NULL, o_w_id BIGINT NOT NULL, o_c_id BIGINT NOT NULL, o_entry_d CHAR(25) NOT NULL, o_carrier_id BIGINT, o_ol_cnt BIGINT NOT NULL, o_all_local BIGINT NOT NULL, PRIMARY KEY(o_w_id, o_d_id, o_id))";
+        String createIndex = "CREATE INDEX ORDERS_SECONDARY ON ORDERS (o_w_id, o_d_id, o_c_id, o_id)";
+        try (Transaction transaction = sqlClient.createTransaction().await()) {
+            try {
+                transaction.executeStatement(createTable).get();
+                transaction.executeStatement(createIndex).get();
+                transaction.commit().get();
+            } catch (ServerException e) {
+                transaction.rollback().get();
+            }
+        }
     }
 
     public void prepareAndInsert() throws IOException, ServerException, InterruptedException {
         String sql = "INSERT INTO ORDERS (o_id, o_d_id, o_w_id, o_c_id, o_entry_d, o_carrier_id, o_ol_cnt, o_all_local) VALUES (:o_id, :o_d_id, :o_w_id, :o_c_id, :o_entry_d, :o_carrier_id, :o_ol_cnt, :o_all_local)";
-        try (Session session = SessionBuilder.connect(url)
-             .withCredential(new UsernamePasswordCredential("user", "pass"))
-             .create(10, TimeUnit.SECONDS);
-             SqlClient sqlClient = SqlClient.attach(session);
-             var preparedStatement = sqlClient.prepare(sql,
+        try (var preparedStatement = sqlClient.prepare(sql,
                                                        Placeholders.of("o_id", long.class),
                                                        Placeholders.of("o_d_id", long.class),
                                                        Placeholders.of("o_w_id", long.class),
@@ -53,8 +68,6 @@ public class Insert {
             } catch (ServerException e) {
                 transaction.rollback().get();
             }
-        } catch (TimeoutException e) {
-                System.out.println(e);
         }
     }
     public void insertByText() throws IOException, ServerException, InterruptedException {
@@ -70,5 +83,9 @@ public class Insert {
                 transaction.rollback().get();
             }
         }
+    }
+
+    public void close() throws IOException, ServerException, InterruptedException {
+        session.close();
     }
 }

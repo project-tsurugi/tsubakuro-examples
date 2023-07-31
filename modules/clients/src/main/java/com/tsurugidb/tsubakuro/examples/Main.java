@@ -104,15 +104,17 @@ public final class Main {
             try {
                 if (!selectOnly) {
                     var insert = new Insert(url);
+                    insert.createTable();
                     if (!textInsert) {
                         insert.prepareAndInsert();
                     } else {
                         insert.insertByText();
                     }
+                    insert.close();
                 }
                 var select = new Select(url, loopCount, selectCount, threadCount, suppressDisplay, sleepSeconds, timeout);
                 select.prepareAndSelect();
-            } catch (IOException | ServerException | InterruptedException e) {
+            } catch (IOException | ServerException | InterruptedException | TimeoutException e) {
                 System.out.println(e);
             }
         }
