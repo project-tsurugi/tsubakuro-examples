@@ -15,7 +15,6 @@ import com.tsurugidb.tsubakuro.sql.Parameters;
 
 public class NewOrder {
     SqlClient sqlClient;
-    Transaction transaction;
     RandomGenerator randomGenerator;
     Profile profile;
 
@@ -179,238 +178,234 @@ public class NewOrder {
         paramsWillRollback = (randomGenerator.uniformWithin(1, 100) == 1);
     }
 
-    void rollback() throws IOException, ServerException, InterruptedException {
-        try {
-            transaction.rollback().get();
-        } finally {
-            transaction = null;
-        }
+    void rollback(Transaction transaction) throws IOException, ServerException, InterruptedException {
+        transaction.rollback().get();
     }
 
     @SuppressWarnings("checkstyle:methodlength")
     public void transaction(AtomicBoolean stop) throws IOException, ServerException, InterruptedException {
         while (!stop.get()) {
-            transaction = sqlClient.createTransaction().get();
-            profile.invocation.newOrder++;
-            total = 0;
-    
-            // SELECT w_tax, c_discount, c_last, c_credit FROM WAREHOUSE, CUSTOMER WHERE w_id = :w_id AND c_w_id = w_id AND c_d_id = :c_d_id AND c_id = :c_id;
-            var future1 = transaction.executeQuery(prepared1,
-            Parameters.of("w_id", (long) paramsWid),
-            Parameters.of("c_d_id", (long) paramsDid),
-            Parameters.of("c_id", (long) paramsCid));
-            try (var resultSet1 = future1.get()) {
-                if (!resultSet1.nextRow()) {
-                    throw new IOException("no record");
-                }
-                resultSet1.nextColumn();
-                wTax = resultSet1.fetchFloat8Value();
-                resultSet1.nextColumn();
-                cDiscount = resultSet1.fetchFloat8Value();
-                resultSet1.nextColumn();
-                cLast = resultSet1.fetchCharacterValue();
-                resultSet1.nextColumn();
-                cCredit = resultSet1.fetchCharacterValue();
-                if (resultSet1.nextRow()) {
-                    throw new IOException("found multiple records");
-                }
-            } catch (ServerException e) {
-                profile.retryOnStatement.newOrder++;
-                profile.customerTable.newOrder++;
-                rollback();
-                continue;
-            }
-    
-            // SELECT d_next_o_id, d_tax FROM DISTRICT WHERE d_w_id = :d_w_id AND d_id = :d_id
-            var future2 = transaction.executeQuery(prepared2,
-            Parameters.of("d_w_id", (long) paramsWid),
-            Parameters.of("d_id", (long) paramsDid));
-            try (var resultSet2 = future2.get()) {
-                if (!resultSet2.nextRow()) {
-                    throw new IOException("no record");
-                }
-                resultSet2.nextColumn();
-                dNextOid = resultSet2.fetchInt8Value();
-                resultSet2.nextColumn();
-                dTax = resultSet2.fetchFloat8Value();
-                if (resultSet2.nextRow()) {
-                    throw new IOException("found multiple records");
-                }
-            } catch (ServerException e) {
-                profile.retryOnStatement.newOrder++;
-                profile.districtTable.newOrder++;
-                rollback();
-                continue;
-            }
-    
-            try {
-                // UPDATE DISTRICT SET d_next_o_id = :d_next_o_id WHERE d_w_id = :d_w_id AND d_id = :d_id
-                var future3 = transaction.executeStatement(prepared3,
-                    Parameters.of("d_next_o_id", (long) (dNextOid + 1)),
-                    Parameters.of("d_w_id", (long) paramsWid),
-                    Parameters.of("d_id", (long) paramsDid));
-                var result3 = future3.get();
-            } catch (ServerException e) {
-                profile.retryOnStatement.newOrder++;
-                profile.districtTable.newOrder++;
-                rollback();
-                continue;
-            }
-    
-            oid = dNextOid;
-    
-            try {
-                // INSERT INTO ORDERS (o_id, o_d_id, o_w_id, o_c_id, o_entry_d, o_ol_cnt, o_all_local) VALUES (:o_id, :o_d_id, :o_w_id, :o_c_id, :o_entry_d, :o_ol_cnt, :o_all_local
-                var future4 = transaction.executeStatement(prepared4,
-                    Parameters.of("o_id", (long) oid),
-                    Parameters.of("o_d_id", (long) paramsDid),
-                    Parameters.of("o_w_id", (long) paramsWid),
-                    Parameters.of("o_c_id", (long) paramsCid),
-                    Parameters.of("o_entry_d", paramsEntryD),
-                    Parameters.of("o_ol_cnt", (long) paramsOlCnt),
-                    Parameters.of("o_all_local", (long) paramsAllLocal));
-                var result4 = future4.get();
-            } catch (ServerException e) {
-                profile.retryOnStatement.newOrder++;
-                profile.ordersTable.newOrder++;
-                rollback();
-                continue;
-            }
-    
-            try {
-                // INSERT INTO NEW_ORDER (no_o_id, no_d_id, no_w_id)VALUES (:no_o_id, :no_d_id, :no_w_id
-                var future5 = transaction.executeStatement(prepared5,
-                    Parameters.of("no_o_id", (long) oid),
-                    Parameters.of("no_d_id", (long) paramsDid),
-                    Parameters.of("no_w_id", (long) paramsWid));
-                var result5 = future5.get();
-            } catch (ServerException e) {
-                profile.retryOnStatement.newOrder++;
-                profile.ordersTable.newOrder++;
-                rollback();
-                continue;
-            }
-    
-            int olNumber;
-            for (olNumber = 1; olNumber <= paramsOlCnt; olNumber++) {
-                var olSupplyWid = paramsSupplyWid;
-                var olIid = paramsItemId[olNumber - 1];
-                var olQuantity = paramsQty[olNumber - 1];
-        
-                // SELECT i_price, i_name , i_data FROM ITEM WHERE i_id = :i_id
-                var future6 = transaction.executeQuery(prepared6,
-                Parameters.of("i_id", (long) olIid));
-                try (var resultSet6 = future6.get()) {
-                    if (!resultSet6.nextRow()) {
+            try (var transaction = sqlClient.createTransaction().get();) {
+                profile.invocation.newOrder++;
+                total = 0;
+                
+                // SELECT w_tax, c_discount, c_last, c_credit FROM WAREHOUSE, CUSTOMER WHERE w_id = :w_id AND c_w_id = w_id AND c_d_id = :c_d_id AND c_id = :c_id;
+                var future1 = transaction.executeQuery(prepared1,
+                                                       Parameters.of("w_id", (long) paramsWid),
+                                                       Parameters.of("c_d_id", (long) paramsDid),
+                                                       Parameters.of("c_id", (long) paramsCid));
+                try (var resultSet1 = future1.get()) {
+                    if (!resultSet1.nextRow()) {
                         throw new IOException("no record");
                     }
-                    resultSet6.nextColumn();
-                    iPrice = resultSet6.fetchFloat8Value();
-                    resultSet6.nextColumn();
-                    iName = resultSet6.fetchCharacterValue();
-                    resultSet6.nextColumn();
-                    iData = resultSet6.fetchCharacterValue();
-                    if (resultSet6.nextRow()) {
+                    resultSet1.nextColumn();
+                    wTax = resultSet1.fetchFloat8Value();
+                    resultSet1.nextColumn();
+                    cDiscount = resultSet1.fetchFloat8Value();
+                    resultSet1.nextColumn();
+                    cLast = resultSet1.fetchCharacterValue();
+                    resultSet1.nextColumn();
+                    cCredit = resultSet1.fetchCharacterValue();
+                    if (resultSet1.nextRow()) {
                         throw new IOException("found multiple records");
                     }
                 } catch (ServerException e) {
-                    break;
-                }
-    
-                // SELECT s_quantity, s_data, s_dist_01, s_dist_02, s_dist_03, s_dist_04, s_dist_05, s_dist_06, s_dist_07, s_dist_08, s_dist_09, s_dist_10 FROM STOCK WHERE s_i_id = :s_i_id AND s_w_id = :s_w_id
-                var future7 = transaction.executeQuery(prepared7,
-                Parameters.of("s_i_id", (long) olIid),
-                Parameters.of("s_w_id", (long) olSupplyWid));
-                try (var resultSet7 = future7.get()) {
-                    if (!resultSet7.nextRow()) {
-                        throw new IOException("no record");
-                    }
-                    resultSet7.nextColumn();
-                    sQuantity = resultSet7.fetchInt8Value();
-                    resultSet7.nextColumn();
-                    sData = resultSet7.fetchCharacterValue();
-                    for (int i = 0; i < 10; i++) {
-                        resultSet7.nextColumn();
-                        sDistData[i] = resultSet7.fetchCharacterValue();
-                    }
-                    if (resultSet7.nextRow()) {
-                        throw new IOException("found multiple records");
-                    }
-                } catch (ServerException e) {
-                    profile.stockTable.newOrder++;
-                    break;
-                }
-    
-                String olDistInfo = sDistData[(int) paramsDid - 1].substring(0, 24);
-                stock[olNumber - 1] = sQuantity;
-        
-                if (iData.indexOf("original") >= 0 && sData.indexOf("original") >= 0) {
-                    bg[olNumber - 1] = "B";
-                } else {
-                    bg[olNumber - 1] = "G";
-                }
-        
-                if (sQuantity > olQuantity) {
-                    sQuantity = sQuantity - olQuantity;
-                } else {
-                    sQuantity = sQuantity - olQuantity + 91;
-                }
-        
-                try {
-                    // UPDATE STOCK SET s_quantity = :s_quantity WHERE s_i_id = :s_i_id AND s_w_id = :s_w_id
-                    var future8 = transaction.executeStatement(prepared8,
-                        Parameters.of("s_quantity", (long) sQuantity),
-                        Parameters.of("s_i_id", (long) olIid),
-                        Parameters.of("s_w_id", (long) olSupplyWid));
-                    var result8 = future8.get();
-                } catch (ServerException e) {
-                    profile.stockTable.newOrder++;
-                    break;
-                }
-        
-                double olAmount = olQuantity * iPrice * (1 + wTax + dTax) * (1 - cDiscount);
-                amt[olNumber - 1] = olAmount;
-                total += olAmount;
-    
-                try {
-                    // INSERT INTO ORDER_LINE (ol_o_id, ol_d_id, ol_w_id, ol_number, ol_i_id, ol_supply_w_id, ol_quantity, ol_amount, ol_dist_info)VALUES (:ol_o_id, :ol_d_id, :ol_w_id, :ol_number, :ol_i_id, :ol_supply_w_id, :ol_quantity, :ol_amount, :ol_dist_info
-                    var future9 = transaction.executeStatement(prepared9,
-                        Parameters.of("ol_o_id", (long) oid),
-                        Parameters.of("ol_d_id", (long) paramsDid),
-                        Parameters.of("ol_w_id", (long) paramsWid),
-                        Parameters.of("ol_number", (long) olNumber),
-                        Parameters.of("ol_i_id", (long) olIid),
-                        Parameters.of("ol_supply_w_id", (long) olSupplyWid),
-                        Parameters.of("ol_quantity", (long) olQuantity),
-                        Parameters.of("ol_amount", (long) olAmount),
-                        Parameters.of("ol_dist_info", olDistInfo));
-                    var result9 = future9.get();
-                } catch (ServerException e) {
-                    profile.ordersTable.newOrder++;
-                    break;
-                }
-            }
-
-            if (olNumber > paramsOlCnt) {  // completed 'for (olNumber = 1; olNumber <= paramsOlCnt; olNumber++) {'
-                if (paramsWillRollback) {
-                    rollback();
-                    profile.newOrderIntentionalRollback++;
-                    return;
-                }
-                try {
-                    transaction.commit().get();
-                    profile.completion.newOrder++;
-                    return;
-                } catch (ServerException e) {
-                    profile.retryOnCommit.newOrder++;
-                    transaction = null;
+                    profile.retryOnStatement.newOrder++;
+                    profile.customerTable.newOrder++;
+                    rollback(transaction);
                     continue;
                 }
+                
+                // SELECT d_next_o_id, d_tax FROM DISTRICT WHERE d_w_id = :d_w_id AND d_id = :d_id
+                var future2 = transaction.executeQuery(prepared2,
+                                                       Parameters.of("d_w_id", (long) paramsWid),
+                                                       Parameters.of("d_id", (long) paramsDid));
+                try (var resultSet2 = future2.get()) {
+                    if (!resultSet2.nextRow()) {
+                        throw new IOException("no record");
+                    }
+                    resultSet2.nextColumn();
+                    dNextOid = resultSet2.fetchInt8Value();
+                    resultSet2.nextColumn();
+                    dTax = resultSet2.fetchFloat8Value();
+                    if (resultSet2.nextRow()) {
+                        throw new IOException("found multiple records");
+                    }
+                } catch (ServerException e) {
+                    profile.retryOnStatement.newOrder++;
+                    profile.districtTable.newOrder++;
+                    rollback(transaction);
+                    continue;
+                }
+                
+                try {
+                    // UPDATE DISTRICT SET d_next_o_id = :d_next_o_id WHERE d_w_id = :d_w_id AND d_id = :d_id
+                    var future3 = transaction.executeStatement(prepared3,
+                                                               Parameters.of("d_next_o_id", (long) (dNextOid + 1)),
+                                                               Parameters.of("d_w_id", (long) paramsWid),
+                                                               Parameters.of("d_id", (long) paramsDid));
+                    var result3 = future3.get();
+                } catch (ServerException e) {
+                    profile.retryOnStatement.newOrder++;
+                    profile.districtTable.newOrder++;
+                    rollback(transaction);
+                    continue;
+                }
+                
+                oid = dNextOid;
+                
+                try {
+                    // INSERT INTO ORDERS (o_id, o_d_id, o_w_id, o_c_id, o_entry_d, o_ol_cnt, o_all_local) VALUES (:o_id, :o_d_id, :o_w_id, :o_c_id, :o_entry_d, :o_ol_cnt, :o_all_local
+                    var future4 = transaction.executeStatement(prepared4,
+                                                               Parameters.of("o_id", (long) oid),
+                                                               Parameters.of("o_d_id", (long) paramsDid),
+                                                               Parameters.of("o_w_id", (long) paramsWid),
+                                                               Parameters.of("o_c_id", (long) paramsCid),
+                                                               Parameters.of("o_entry_d", paramsEntryD),
+                                                               Parameters.of("o_ol_cnt", (long) paramsOlCnt),
+                                                               Parameters.of("o_all_local", (long) paramsAllLocal));
+                    var result4 = future4.get();
+                } catch (ServerException e) {
+                    profile.retryOnStatement.newOrder++;
+                    profile.ordersTable.newOrder++;
+                    rollback(transaction);
+                    continue;
+                }
+                
+                try {
+                    // INSERT INTO NEW_ORDER (no_o_id, no_d_id, no_w_id)VALUES (:no_o_id, :no_d_id, :no_w_id
+                    var future5 = transaction.executeStatement(prepared5,
+                                                               Parameters.of("no_o_id", (long) oid),
+                                                               Parameters.of("no_d_id", (long) paramsDid),
+                                                               Parameters.of("no_w_id", (long) paramsWid));
+                    var result5 = future5.get();
+                } catch (ServerException e) {
+                    profile.retryOnStatement.newOrder++;
+                    profile.ordersTable.newOrder++;
+                    rollback(transaction);
+                    continue;
+                }
+                
+                int olNumber;
+                for (olNumber = 1; olNumber <= paramsOlCnt; olNumber++) {
+                    var olSupplyWid = paramsSupplyWid;
+                    var olIid = paramsItemId[olNumber - 1];
+                    var olQuantity = paramsQty[olNumber - 1];
+                    
+                    // SELECT i_price, i_name , i_data FROM ITEM WHERE i_id = :i_id
+                    var future6 = transaction.executeQuery(prepared6,
+                                                           Parameters.of("i_id", (long) olIid));
+                    try (var resultSet6 = future6.get()) {
+                        if (!resultSet6.nextRow()) {
+                            throw new IOException("no record");
+                        }
+                        resultSet6.nextColumn();
+                        iPrice = resultSet6.fetchFloat8Value();
+                        resultSet6.nextColumn();
+                        iName = resultSet6.fetchCharacterValue();
+                        resultSet6.nextColumn();
+                        iData = resultSet6.fetchCharacterValue();
+                        if (resultSet6.nextRow()) {
+                            throw new IOException("found multiple records");
+                        }
+                    } catch (ServerException e) {
+                        break;
+                    }
+                    
+                    // SELECT s_quantity, s_data, s_dist_01, s_dist_02, s_dist_03, s_dist_04, s_dist_05, s_dist_06, s_dist_07, s_dist_08, s_dist_09, s_dist_10 FROM STOCK WHERE s_i_id = :s_i_id AND s_w_id = :s_w_id
+                    var future7 = transaction.executeQuery(prepared7,
+                                                           Parameters.of("s_i_id", (long) olIid),
+                                                           Parameters.of("s_w_id", (long) olSupplyWid));
+                    try (var resultSet7 = future7.get()) {
+                        if (!resultSet7.nextRow()) {
+                            throw new IOException("no record");
+                        }
+                        resultSet7.nextColumn();
+                        sQuantity = resultSet7.fetchInt8Value();
+                        resultSet7.nextColumn();
+                        sData = resultSet7.fetchCharacterValue();
+                        for (int i = 0; i < 10; i++) {
+                            resultSet7.nextColumn();
+                            sDistData[i] = resultSet7.fetchCharacterValue();
+                        }
+                        if (resultSet7.nextRow()) {
+                            throw new IOException("found multiple records");
+                        }
+                    } catch (ServerException e) {
+                        profile.stockTable.newOrder++;
+                        break;
+                    }
+                    
+                    String olDistInfo = sDistData[(int) paramsDid - 1].substring(0, 24);
+                    stock[olNumber - 1] = sQuantity;
+                    
+                    if (iData.indexOf("original") >= 0 && sData.indexOf("original") >= 0) {
+                        bg[olNumber - 1] = "B";
+                    } else {
+                        bg[olNumber - 1] = "G";
+                    }
+                    
+                    if (sQuantity > olQuantity) {
+                        sQuantity = sQuantity - olQuantity;
+                    } else {
+                        sQuantity = sQuantity - olQuantity + 91;
+                    }
+                    
+                    try {
+                        // UPDATE STOCK SET s_quantity = :s_quantity WHERE s_i_id = :s_i_id AND s_w_id = :s_w_id
+                        var future8 = transaction.executeStatement(prepared8,
+                                                                   Parameters.of("s_quantity", (long) sQuantity),
+                                                                   Parameters.of("s_i_id", (long) olIid),
+                                                                   Parameters.of("s_w_id", (long) olSupplyWid));
+                        var result8 = future8.get();
+                    } catch (ServerException e) {
+                        profile.stockTable.newOrder++;
+                        break;
+                    }
+                    
+                    double olAmount = olQuantity * iPrice * (1 + wTax + dTax) * (1 - cDiscount);
+                    amt[olNumber - 1] = olAmount;
+                    total += olAmount;
+                    
+                    try {
+                        // INSERT INTO ORDER_LINE (ol_o_id, ol_d_id, ol_w_id, ol_number, ol_i_id, ol_supply_w_id, ol_quantity, ol_amount, ol_dist_info)VALUES (:ol_o_id, :ol_d_id, :ol_w_id, :ol_number, :ol_i_id, :ol_supply_w_id, :ol_quantity, :ol_amount, :ol_dist_info
+                        var future9 = transaction.executeStatement(prepared9,
+                                                                   Parameters.of("ol_o_id", (long) oid),
+                                                                   Parameters.of("ol_d_id", (long) paramsDid),
+                                                                   Parameters.of("ol_w_id", (long) paramsWid),
+                                                                   Parameters.of("ol_number", (long) olNumber),
+                                                                   Parameters.of("ol_i_id", (long) olIid),
+                                                                   Parameters.of("ol_supply_w_id", (long) olSupplyWid),
+                                                                   Parameters.of("ol_quantity", (long) olQuantity),
+                                                                   Parameters.of("ol_amount", (long) olAmount),
+                                                                   Parameters.of("ol_dist_info", olDistInfo));
+                        var result9 = future9.get();
+                    } catch (ServerException e) {
+                        profile.ordersTable.newOrder++;
+                        break;
+                    }
+                }
+                
+                if (olNumber > paramsOlCnt) {  // completed 'for (olNumber = 1; olNumber <= paramsOlCnt; olNumber++) {'
+                    if (paramsWillRollback) {
+                        rollback(transaction);
+                        profile.newOrderIntentionalRollback++;
+                        return;
+                    }
+                    try {
+                        transaction.commit().get();
+                        profile.completion.newOrder++;
+                        return;
+                    } catch (ServerException e) {
+                        profile.retryOnCommit.newOrder++;
+                        continue;
+                    }
+                }
+                
+                // break in 'for (olNumber = 1; olNumber <= paramsOlCnt; olNumber++) {'
+                profile.retryOnStatement.newOrder++;
+                rollback(transaction);
             }
-
-            // break in 'for (olNumber = 1; olNumber <= paramsOlCnt; olNumber++) {'
-            profile.retryOnStatement.newOrder++;
-            rollback();
         }
     }
 }

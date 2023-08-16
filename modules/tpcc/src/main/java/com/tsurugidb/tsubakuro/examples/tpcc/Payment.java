@@ -15,7 +15,6 @@ import com.tsurugidb.tsubakuro.sql.Parameters;
 
 public class Payment {
     SqlClient sqlClient;
-    Transaction transaction;
     RandomGenerator randomGenerator;
     Profile profile;
 
@@ -186,258 +185,254 @@ public class Payment {
         paramsHdata = randomGenerator.makeAlphaString(12, 24);
     }
 
-    void rollback() throws IOException, ServerException, InterruptedException {
-        try {
-            transaction.rollback().get();
-        } finally {
-            transaction = null;
-        }
+    void rollback(Transaction transaction) throws IOException, ServerException, InterruptedException {
+        transaction.rollback().get();
     }
 
     @SuppressWarnings("checkstyle:methodlength")
     public void transaction(AtomicBoolean stop) throws IOException, ServerException, InterruptedException {
         while (!stop.get()) {
-            transaction = sqlClient.createTransaction().get();
-            profile.invocation.payment++;
-    
-            try {
-                // UPDATE WAREHOUSE SET w_ytd = w_ytd + :h_amount WHERE w_id = :w_id
-                var future1 = transaction.executeStatement(prepared1,
-                    Parameters.of("h_amount", (double) paramsHamount),
-                    Parameters.of("w_id", (long) paramsWid));
-                var result1 = future1.get();
-            } catch (ServerException e) {
-                profile.retryOnStatement.payment++;
-                profile.warehouseTable.payment++;
-                rollback();
-                continue;
-            }
-    
-            // SELECT w_street_1, w_street_2, w_city, w_state, w_zip, w_name FROM WAREHOUSE WHERE w_id = :w_id
-            var future2 = transaction.executeQuery(prepared2,
-                Parameters.of("w_id", (long) paramsWid));
-            try (var resultSet2 = future2.get()) {
-                if (!resultSet2.nextRow()) {
-                    throw new IOException("no record");
-                }
-                resultSet2.nextColumn();
-                wName = resultSet2.fetchCharacterValue();
-                resultSet2.nextColumn();
-                wStreet1 = resultSet2.fetchCharacterValue();
-                resultSet2.nextColumn();
-                wStreet2 = resultSet2.fetchCharacterValue();
-                resultSet2.nextColumn();
-                wCity = resultSet2.fetchCharacterValue();
-                resultSet2.nextColumn();
-                wState = resultSet2.fetchCharacterValue();
-                resultSet2.nextColumn();
-                wZip = resultSet2.fetchCharacterValue();
-                if (resultSet2.nextRow()) {
-                    throw new IOException("found multiple records");
-                }
-            } catch (ServerException e) {
-                profile.retryOnStatement.payment++;
-                profile.warehouseTable.payment++;
-                rollback();
-                continue;
-            }
-    
-            try {
-                // UPDATE DISTRICT SET d_ytd = d_ytd + :h_amount WHERE d_w_id = :d_w_id AND d_id = :d_id";
-                var future3 = transaction.executeStatement(prepared3,
-                    Parameters.of("h_amount", (double) paramsHamount),
-                    Parameters.of("d_w_id", (long) paramsWid),
-                    Parameters.of("d_id", (long) paramsDid));
-                var result3 = future3.get();
-            } catch (ServerException e) {
-                profile.retryOnStatement.payment++;
-                profile.districtTable.payment++;
-                rollback();
-                continue;
-            }
-    
-            // SELECT d_street_1, d_street_2, d_city, d_state, d_zip, d_name FROM DISTRICT WHERE d_w_id = :d_w_id AND d_id = :d_id
-            var future4 = transaction.executeQuery(prepared4,
-                    Parameters.of("d_w_id", (long) paramsWid),
-                    Parameters.of("d_id", (long) paramsDid));
-            try (var resultSet4 = future4.get()) {
-                if (!resultSet4.nextRow()) {
-                    throw new IOException("no record");
-                }
-                resultSet4.nextColumn();
-                dStreet1 = resultSet4.fetchCharacterValue();
-                resultSet4.nextColumn();
-                dStreet2 = resultSet4.fetchCharacterValue();
-                resultSet4.nextColumn();
-                dCity = resultSet4.fetchCharacterValue();
-                resultSet4.nextColumn();
-                dState = resultSet4.fetchCharacterValue();
-                resultSet4.nextColumn();
-                dZip = resultSet4.fetchCharacterValue();
-                resultSet4.nextColumn();
-                dName = resultSet4.fetchCharacterValue();
-                if (resultSet4.nextRow()) {
-                    throw new IOException("found multiple records");
-                }
-            } catch (ServerException e) {
-                profile.retryOnStatement.payment++;
-                profile.districtTable.payment++;
-                rollback();
-                continue;
-            }
-    
-            if (!paramsByName) {
-                cId = paramsCid;
-            } else {
-                cId = Customer.chooseCustomer(transaction, prepared5, prepared6, paramsWid, paramsDid, paramsClast);
-                if (cId < 0) {
+            try (var transaction = sqlClient.createTransaction().get();) {
+                profile.invocation.payment++;
+                
+                try {
+                    // UPDATE WAREHOUSE SET w_ytd = w_ytd + :h_amount WHERE w_id = :w_id
+                    var future1 = transaction.executeStatement(prepared1,
+                                                               Parameters.of("h_amount", (double) paramsHamount),
+                                                               Parameters.of("w_id", (long) paramsWid));
+                    var result1 = future1.get();
+                } catch (ServerException e) {
                     profile.retryOnStatement.payment++;
-                    profile.customerTable.payment++;
-                    rollback();
+                    profile.warehouseTable.payment++;
+                    rollback(transaction);
                     continue;
                 }
-            }
-    
-            // SELECT c_first, c_middle, c_last, c_street_1, c_street_2, c_city, c_state, c_zip, c_phone, c_credit, c_credit_lim, c_discount, c_balance, c_since FROM CUSTOMER WHERE c_w_id = :c_w_id AND c_d_id = :c_d_id AND c_id = :c_id
-            var future7 = transaction.executeQuery(prepared7,
-                    Parameters.of("c_w_id", (long) paramsWid),
-                    Parameters.of("c_d_id", (long) paramsDid),
-                    Parameters.of("c_id", (long) cId));
-            try (var resultSet7 = future7.get()) {
-                if (!resultSet7.nextRow()) {
-                    throw new IOException("no record");
-                }
-                resultSet7.nextColumn();
-                cFirst = resultSet7.fetchCharacterValue();  // c_first(0)
-                resultSet7.nextColumn();
-                cMiddle = resultSet7.fetchCharacterValue();  // c_middle(1)
-                resultSet7.nextColumn();
-                cLast = resultSet7.fetchCharacterValue();  // c_last(2)
-                resultSet7.nextColumn();
-                cStreet1 = resultSet7.fetchCharacterValue();  // c_street_1(3)
-                resultSet7.nextColumn();
-                cStreet2 = resultSet7.fetchCharacterValue();  // c_street_1(4)
-                resultSet7.nextColumn();
-                cCity = resultSet7.fetchCharacterValue();  // c_city(5)
-                resultSet7.nextColumn();
-                cState = resultSet7.fetchCharacterValue();  // c_state(6)
-                resultSet7.nextColumn();
-                cZip = resultSet7.fetchCharacterValue();  // c_zip(7)
-                resultSet7.nextColumn();
-                cPhone = resultSet7.fetchCharacterValue();  // c_phone(8)
-                resultSet7.nextColumn();
-                cCredit = resultSet7.fetchCharacterValue();  // c_credit(9)
-                resultSet7.nextColumn();
-                cCreditLim = resultSet7.fetchFloat8Value();  // c_credit_lim(10)
-                resultSet7.nextColumn();
-                cDiscount = resultSet7.fetchFloat8Value();  // c_discount(11)
-                resultSet7.nextColumn();
-                cBalance = resultSet7.fetchFloat8Value();  // c_balance(12)
-                resultSet7.nextColumn();
-                cSince = resultSet7.fetchCharacterValue();  // c_since(13)
-                if (resultSet7.nextRow()) {
-                    throw new IOException("found multiple records");
-                }
-            } catch (ServerException e) {
-                profile.retryOnStatement.payment++;
-                profile.customerTable.payment++;
-                rollback();
-                continue;
-            }
-    
-            cBalance += paramsHamount;
-    
-            if (cCredit.indexOf("BC") >= 0) {
-                // SELECT c_data FROM CUSTOMER WHERE c_w_id = :c_w_id AND c_d_id = :c_d_id AND c_id = :c_id
-                var future8 = transaction.executeQuery(prepared8,
-                    Parameters.of("c_w_id", (long) paramsWid),
-                    Parameters.of("c_d_id", (long) paramsDid),
-                    Parameters.of("c_id", (long) cId));
-                try (var resultSet8 = future8.get()) {
-                    if (!resultSet8.nextRow()) {
+                
+                // SELECT w_street_1, w_street_2, w_city, w_state, w_zip, w_name FROM WAREHOUSE WHERE w_id = :w_id
+                var future2 = transaction.executeQuery(prepared2,
+                                                       Parameters.of("w_id", (long) paramsWid));
+                try (var resultSet2 = future2.get()) {
+                    if (!resultSet2.nextRow()) {
                         throw new IOException("no record");
                     }
-                    resultSet8.nextColumn();
-                    cData = resultSet8.fetchCharacterValue();
-                    if (resultSet8.nextRow()) {
+                    resultSet2.nextColumn();
+                    wName = resultSet2.fetchCharacterValue();
+                    resultSet2.nextColumn();
+                    wStreet1 = resultSet2.fetchCharacterValue();
+                    resultSet2.nextColumn();
+                    wStreet2 = resultSet2.fetchCharacterValue();
+                    resultSet2.nextColumn();
+                    wCity = resultSet2.fetchCharacterValue();
+                    resultSet2.nextColumn();
+                    wState = resultSet2.fetchCharacterValue();
+                    resultSet2.nextColumn();
+                    wZip = resultSet2.fetchCharacterValue();
+                    if (resultSet2.nextRow()) {
+                        throw new IOException("found multiple records");
+                    }
+                } catch (ServerException e) {
+                    profile.retryOnStatement.payment++;
+                    profile.warehouseTable.payment++;
+                    rollback(transaction);
+                    continue;
+                }
+                
+                try {
+                    // UPDATE DISTRICT SET d_ytd = d_ytd + :h_amount WHERE d_w_id = :d_w_id AND d_id = :d_id";
+                    var future3 = transaction.executeStatement(prepared3,
+                                                               Parameters.of("h_amount", (double) paramsHamount),
+                                                               Parameters.of("d_w_id", (long) paramsWid),
+                                                               Parameters.of("d_id", (long) paramsDid));
+                    var result3 = future3.get();
+                } catch (ServerException e) {
+                    profile.retryOnStatement.payment++;
+                    profile.districtTable.payment++;
+                    rollback(transaction);
+                    continue;
+                }
+                
+                // SELECT d_street_1, d_street_2, d_city, d_state, d_zip, d_name FROM DISTRICT WHERE d_w_id = :d_w_id AND d_id = :d_id
+                var future4 = transaction.executeQuery(prepared4,
+                                                       Parameters.of("d_w_id", (long) paramsWid),
+                                                       Parameters.of("d_id", (long) paramsDid));
+                try (var resultSet4 = future4.get()) {
+                    if (!resultSet4.nextRow()) {
+                        throw new IOException("no record");
+                    }
+                    resultSet4.nextColumn();
+                    dStreet1 = resultSet4.fetchCharacterValue();
+                    resultSet4.nextColumn();
+                    dStreet2 = resultSet4.fetchCharacterValue();
+                    resultSet4.nextColumn();
+                    dCity = resultSet4.fetchCharacterValue();
+                    resultSet4.nextColumn();
+                    dState = resultSet4.fetchCharacterValue();
+                    resultSet4.nextColumn();
+                    dZip = resultSet4.fetchCharacterValue();
+                    resultSet4.nextColumn();
+                    dName = resultSet4.fetchCharacterValue();
+                    if (resultSet4.nextRow()) {
+                        throw new IOException("found multiple records");
+                    }
+                } catch (ServerException e) {
+                    profile.retryOnStatement.payment++;
+                    profile.districtTable.payment++;
+                    rollback(transaction);
+                    continue;
+                }
+                
+                if (!paramsByName) {
+                    cId = paramsCid;
+                } else {
+                    cId = Customer.chooseCustomer(transaction, prepared5, prepared6, paramsWid, paramsDid, paramsClast);
+                    if (cId < 0) {
+                        profile.retryOnStatement.payment++;
+                        profile.customerTable.payment++;
+                        rollback(transaction);
+                        continue;
+                    }
+                }
+                
+                // SELECT c_first, c_middle, c_last, c_street_1, c_street_2, c_city, c_state, c_zip, c_phone, c_credit, c_credit_lim, c_discount, c_balance, c_since FROM CUSTOMER WHERE c_w_id = :c_w_id AND c_d_id = :c_d_id AND c_id = :c_id
+                var future7 = transaction.executeQuery(prepared7,
+                                                       Parameters.of("c_w_id", (long) paramsWid),
+                                                       Parameters.of("c_d_id", (long) paramsDid),
+                                                       Parameters.of("c_id", (long) cId));
+                try (var resultSet7 = future7.get()) {
+                    if (!resultSet7.nextRow()) {
+                        throw new IOException("no record");
+                    }
+                    resultSet7.nextColumn();
+                    cFirst = resultSet7.fetchCharacterValue();  // c_first(0)
+                    resultSet7.nextColumn();
+                    cMiddle = resultSet7.fetchCharacterValue();  // c_middle(1)
+                    resultSet7.nextColumn();
+                    cLast = resultSet7.fetchCharacterValue();  // c_last(2)
+                    resultSet7.nextColumn();
+                    cStreet1 = resultSet7.fetchCharacterValue();  // c_street_1(3)
+                    resultSet7.nextColumn();
+                    cStreet2 = resultSet7.fetchCharacterValue();  // c_street_1(4)
+                    resultSet7.nextColumn();
+                    cCity = resultSet7.fetchCharacterValue();  // c_city(5)
+                    resultSet7.nextColumn();
+                    cState = resultSet7.fetchCharacterValue();  // c_state(6)
+                    resultSet7.nextColumn();
+                    cZip = resultSet7.fetchCharacterValue();  // c_zip(7)
+                    resultSet7.nextColumn();
+                    cPhone = resultSet7.fetchCharacterValue();  // c_phone(8)
+                    resultSet7.nextColumn();
+                    cCredit = resultSet7.fetchCharacterValue();  // c_credit(9)
+                    resultSet7.nextColumn();
+                    cCreditLim = resultSet7.fetchFloat8Value();  // c_credit_lim(10)
+                    resultSet7.nextColumn();
+                    cDiscount = resultSet7.fetchFloat8Value();  // c_discount(11)
+                    resultSet7.nextColumn();
+                    cBalance = resultSet7.fetchFloat8Value();  // c_balance(12)
+                    resultSet7.nextColumn();
+                    cSince = resultSet7.fetchCharacterValue();  // c_since(13)
+                    if (resultSet7.nextRow()) {
                         throw new IOException("found multiple records");
                     }
                 } catch (ServerException e) {
                     profile.retryOnStatement.payment++;
                     profile.customerTable.payment++;
-                    rollback();
+                    rollback(transaction);
                     continue;
                 }
-    
-                String cNewData = String.format("| %4d %2d %4d %2d %4d $%7.2f ", cId, paramsDid, paramsWid, paramsDid, paramsWid, paramsHamount) + paramsHdate + " " + paramsHdata;
-                int length = 500 - cNewData.length();
-                if (length < cData.length()) {
-                    cNewData += cData.substring(0, length);
+                
+                cBalance += paramsHamount;
+                
+                if (cCredit.indexOf("BC") >= 0) {
+                    // SELECT c_data FROM CUSTOMER WHERE c_w_id = :c_w_id AND c_d_id = :c_d_id AND c_id = :c_id
+                    var future8 = transaction.executeQuery(prepared8,
+                                                           Parameters.of("c_w_id", (long) paramsWid),
+                                                           Parameters.of("c_d_id", (long) paramsDid),
+                                                           Parameters.of("c_id", (long) cId));
+                    try (var resultSet8 = future8.get()) {
+                        if (!resultSet8.nextRow()) {
+                            throw new IOException("no record");
+                        }
+                        resultSet8.nextColumn();
+                        cData = resultSet8.fetchCharacterValue();
+                        if (resultSet8.nextRow()) {
+                            throw new IOException("found multiple records");
+                        }
+                    } catch (ServerException e) {
+                        profile.retryOnStatement.payment++;
+                        profile.customerTable.payment++;
+                        rollback(transaction);
+                        continue;
+                    }
+                    
+                    String cNewData = String.format("| %4d %2d %4d %2d %4d $%7.2f ", cId, paramsDid, paramsWid, paramsDid, paramsWid, paramsHamount) + paramsHdate + " " + paramsHdata;
+                    int length = 500 - cNewData.length();
+                    if (length < cData.length()) {
+                        cNewData += cData.substring(0, length);
+                    } else {
+                        cNewData += cData;
+                    }
+                    
+                    try {
+                        // UPDATE CUSTOMER SET c_balance = :c_balance ,c_data = :c_data WHERE c_w_id = :c_w_id AND c_d_id = :c_d_id AND c_id = :c_id
+                        var future9 = transaction.executeStatement(prepared9,
+                                                                   Parameters.of("c_balance", (double) cBalance),
+                                                                   Parameters.of("c_data", cNewData),
+                                                                   Parameters.of("c_w_id", (long) paramsWid),
+                                                                   Parameters.of("c_d_id", (long) paramsDid),
+                                                                   Parameters.of("c_id", (long) cId));
+                        var result9 = future9.get();
+                    } catch (ServerException e) {
+                        profile.retryOnStatement.payment++;
+                        profile.customerTable.payment++;
+                        rollback(transaction);
+                        continue;
+                    }
                 } else {
-                    cNewData += cData;
+                    try {
+                        // UPDATE CUSTOMER SET c_balance = :c_balance WHERE c_w_id = :c_w_id AND c_d_id = :c_d_id AND c_id = :c_id
+                        var future10 = transaction.executeStatement(prepared10,
+                                                                    Parameters.of("c_balance", (double) cBalance),
+                                                                    Parameters.of("c_w_id", (long) paramsWid),
+                                                                    Parameters.of("c_d_id", (long) paramsDid),
+                                                                    Parameters.of("c_id", (long) cId));
+                        var result10 = future10.get();
+                    } catch (ServerException e) {
+                        profile.retryOnStatement.payment++;
+                        profile.customerTable.payment++;
+                        rollback(transaction);
+                        continue;
+                    }
                 }
-    
+                
+                String hData = String.format("%10s%10s    ", (wName.length() > 10) ? wName.substring(0, 10) : wName, (dName.length() > 10) ? dName.substring(0, 10) : dName);
                 try {
-                    // UPDATE CUSTOMER SET c_balance = :c_balance ,c_data = :c_data WHERE c_w_id = :c_w_id AND c_d_id = :c_d_id AND c_id = :c_id
-                    var future9 = transaction.executeStatement(prepared9,
-                        Parameters.of("c_balance", (double) cBalance),
-                        Parameters.of("c_data", cNewData),
-                        Parameters.of("c_w_id", (long) paramsWid),
-                        Parameters.of("c_d_id", (long) paramsDid),
-                        Parameters.of("c_id", (long) cId));
-                    var result9 = future9.get();
+                    // INSERT INTO HISTORY (h_c_d_id, h_c_w_id, h_c_id, h_d_id, h_w_id, h_date, h_amount, h_data) VALUES (:c_d_id, :c_w_id, :c_id, :d_id, :w_id, :datetime, :h_amount, :h_data)
+                    var future11 = transaction.executeStatement(prepared11,
+                                                                Parameters.of("c_d_id", (long) paramsDid),
+                                                                Parameters.of("c_w_id", (long) paramsWid),
+                                                                
+                                                                Parameters.of("c_id", (long) cId),
+                                                                Parameters.of("d_id", (long) paramsDid),
+                                                                Parameters.of("w_id", (long) paramsWid),
+                                                                
+                                                                Parameters.of("datetime", paramsHdate),
+                                                                Parameters.of("h_amount", (double) paramsHamount),
+                                                                Parameters.of("h_data", hData.substring(0, 24)));
+                    var result11 = future11.get();
                 } catch (ServerException e) {
                     profile.retryOnStatement.payment++;
-                    profile.customerTable.payment++;
-                    rollback();
+                    rollback(transaction);
                     continue;
                 }
-            } else {
+                
                 try {
-                    // UPDATE CUSTOMER SET c_balance = :c_balance WHERE c_w_id = :c_w_id AND c_d_id = :c_d_id AND c_id = :c_id
-                    var future10 = transaction.executeStatement(prepared10,
-                        Parameters.of("c_balance", (double) cBalance),
-                        Parameters.of("c_w_id", (long) paramsWid),
-                        Parameters.of("c_d_id", (long) paramsDid),
-                        Parameters.of("c_id", (long) cId));
-                    var result10 = future10.get();
+                    transaction.commit().get();
+                    profile.completion.payment++;
+                    return;
                 } catch (ServerException e) {
-                    profile.retryOnStatement.payment++;
-                    profile.customerTable.payment++;
-                    rollback();
-                    continue;
-                }
+                    profile.retryOnCommit.payment++;
+                } 
             }
-
-            String hData = String.format("%10s%10s    ", (wName.length() > 10) ? wName.substring(0, 10) : wName, (dName.length() > 10) ? dName.substring(0, 10) : dName);
-            try {
-                // INSERT INTO HISTORY (h_c_d_id, h_c_w_id, h_c_id, h_d_id, h_w_id, h_date, h_amount, h_data) VALUES (:c_d_id, :c_w_id, :c_id, :d_id, :w_id, :datetime, :h_amount, :h_data)
-                var future11 = transaction.executeStatement(prepared11,
-                    Parameters.of("c_d_id", (long) paramsDid),
-                    Parameters.of("c_w_id", (long) paramsWid),
-
-                    Parameters.of("c_id", (long) cId),
-                    Parameters.of("d_id", (long) paramsDid),
-                    Parameters.of("w_id", (long) paramsWid),
-
-                    Parameters.of("datetime", paramsHdate),
-                    Parameters.of("h_amount", (double) paramsHamount),
-                    Parameters.of("h_data", hData.substring(0, 24)));
-                var result11 = future11.get();
-            } catch (ServerException e) {
-                profile.retryOnStatement.payment++;
-                rollback();
-                continue;
-            }
-
-            try {
-                transaction.commit().get();
-                profile.completion.payment++;
-                return;
-            } catch (ServerException e) {
-                profile.retryOnCommit.payment++;
-                transaction = null;
-            } 
         }
     }
 }
