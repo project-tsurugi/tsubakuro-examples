@@ -19,7 +19,7 @@ public class Insert {
                                                        Placeholders.of("int_for_bar1", long.class),
                                                        Placeholders.of("double_for_bar2", double.class),
                                                        Placeholders.of("char_for_bar3", String.class)).get();
-             Transaction transaction = sqlClient.createTransaction().get();) {
+             Transaction transaction = sqlClient.createTransaction().get()) {
 
             // insert first data into foo table
             transaction.executeStatement(preparedStatement,

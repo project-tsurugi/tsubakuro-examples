@@ -14,9 +14,9 @@ public final class Select {
         try (
              Session session = SessionBuilder.connect(url).create();
              SqlClient sqlClient = SqlClient.attach(session);
-             Transaction transaction = sqlClient.createTransaction().get();) {
+             Transaction transaction = sqlClient.createTransaction().get()) {
 
-            try (ResultSet resultSet = transaction.executeQuery("SELECT * FROM foo").get();) {
+            try (ResultSet resultSet = transaction.executeQuery("SELECT * FROM foo").get()) {
                 doSomeWorkUsingResultset(resultSet);
             }
             transaction.commit().get();
