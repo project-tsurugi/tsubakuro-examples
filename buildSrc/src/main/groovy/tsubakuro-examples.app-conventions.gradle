@@ -3,22 +3,10 @@ plugins {
     id 'application'
 }
 
-configurations {
-    nativeLib
-}
-
 dependencies {
     implementation "com.tsurugidb.tsubakuro:tsubakuro-session:${tsubakuroVersion}"
     implementation "com.tsurugidb.tsubakuro:tsubakuro-connector:${tsubakuroVersion}"
     implementation "com.tsurugidb.tsubakuro:tsubakuro-explain:${tsubakuroVersion}"
 
     implementation 'org.slf4j:slf4j-simple:1.7.32'
-
-    nativeLib "com.tsurugidb.tsubakuro:tsubakuro-jni:${tsubakuroVersion}"
-}
-
-task copyNativeLib(type: Copy) {
-    from  configurations.nativeLib
-    into "${buildDir}/native"
-    rename "tsubakuro-jni-${tsubakuroVersion}.so", 'libtsubakuro.so'
 }

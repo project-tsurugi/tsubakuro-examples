@@ -6,7 +6,6 @@ tasks.register('runTpcc', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'com.tsurugidb.tsubakuro.examples.tpcc.Main'
 
-    systemProperty 'com.tsurugidb.tsubakuro.jnilib', "${buildDir}/native/libtsubakuro.so"
     systemProperty 'com.tsurugidb.tsubakuro.jniverify', 'false'
     systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'ipc:tsurugi'
 
@@ -14,8 +13,6 @@ tasks.register('runTpcc', JavaExec) {
     systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'
     systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
     systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
-
-    dependsOn copyNativeLib
 }
 
 startScripts {
