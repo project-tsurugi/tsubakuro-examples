@@ -78,21 +78,6 @@ tasks.withType(JavaCompile) { task ->
     task.options.encoding = 'UTF-8'
 }
 
-task sourcesJar(type: Jar) {
-    classifier 'sources'
-    from sourceSets.main.allSource
-}
-
-task testsJar(type: Jar) {
-    classifier 'tests'
-    from sourceSets.test.output
-}
-
-artifacts {
-    archives tasks.sourcesJar
-    archives tasks.testsJar
-}
-
 tasks.named('test') {
     useJUnitPlatform()
     systemProperty('junit.jupiter.testclass.order.default', 'org.junit.jupiter.api.ClassOrderer$OrderAnnotation')
