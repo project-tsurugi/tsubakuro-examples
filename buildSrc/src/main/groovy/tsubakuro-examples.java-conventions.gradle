@@ -6,10 +6,10 @@ plugins {
 }
 
 group = 'com.tsurugidb.tsubakuro-examples'
-version = '0.0.1-SNAPSHOT'
+version = '1.0.0-SNAPSHOT'
 
 ext {
-    tsubakuroVersion = '0.0.1-SNAPSHOT'
+    tsubakuroVersion = '1.0.0-SNAPSHOT'
 }
 
 if (hasProperty('mavenLocal')) {
@@ -76,21 +76,6 @@ spotbugsTest.enabled = false
 
 tasks.withType(JavaCompile) { task ->
     task.options.encoding = 'UTF-8'
-}
-
-task sourcesJar(type: Jar) {
-    classifier 'sources'
-    from sourceSets.main.allSource
-}
-
-task testsJar(type: Jar) {
-    classifier 'tests'
-    from sourceSets.test.output
-}
-
-artifacts {
-    archives tasks.sourcesJar
-    archives tasks.testsJar
 }
 
 tasks.named('test') {
