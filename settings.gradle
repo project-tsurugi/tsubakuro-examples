@@ -6,6 +6,7 @@ include 'tpch'
 include 'clients'
 include 'cases'
 include 'debug'
+include 'kvs'
 
 rootProject.children.each { project ->
     project.projectDir = new File(settingsDir, "modules/${project.name}")

@@ -1,0 +1,112 @@
+plugins {
+    id 'tsubakuro-examples.app-conventions'
+}
+
+dependencies {
+    implementation "com.tsurugidb.tsubakuro:tsubakuro-kvs:${tsubakuroVersion}"
+
+	// for src/inttest/java
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir "src/bench/java"
+        }
+    }
+    kvsIntegrationTest {
+        java {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+            srcDir "src/inttest/java"
+        }
+        resources.srcDir file('src/inttest/resources')
+    }
+}
+
+configurations {
+    kvsIntegrationTestImplementation.extendsFrom testImplementation
+    kvsIntegrationTestRuntime.extendsFrom testRuntime
+}
+
+// "./gradlew kvsIntegrationTest" or "./gradlew kvsIntegrationTest --info"
+task kvsIntegrationTest(type: Test) {
+    systemProperty 'tsurugi.kvstest.endpoint', 'ipc:tsurugi'
+    useJUnitPlatform()
+    testClassesDirs = sourceSets.kvsIntegrationTest.output.classesDirs
+    classpath = sourceSets.kvsIntegrationTest.runtimeClasspath
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('runSingleEmptyMessageBench', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tsurugidb.tsubakuro.kvs.bench.EmptyMessageBench'
+    jvmArgs = ['--add-opens=java.base/java.nio=ALL-UNNAMED', '-Xmx1024M']
+    args = ['ipc:tsurugi', '1', '10', '30']
+
+    systemProperty 'com.tsurugidb.tsubakuro.jniverify', 'false'
+    systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'ipc:tsurugi'
+
+    systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
+    systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'
+    systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
+    systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
+}
+
+tasks.register('runMultiEmptyMessageBench', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tsurugidb.tsubakuro.kvs.bench.EmptyMessageBench'
+    jvmArgs = ['--add-opens=java.base/java.nio=ALL-UNNAMED', '-Xmx1024M']
+    args = ['ipc:tsurugi', '1,2,4,8', '10', '30']
+
+    systemProperty 'com.tsurugidb.tsubakuro.jniverify', 'false'
+
+    systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
+    systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'
+    systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
+    systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
+}
+
+tasks.register('runYCSBlikeBenchCreateDB', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tsurugidb.tsubakuro.kvs.ycsb.YCSBlikeBenchmark'
+    jvmArgs = ['--add-opens=java.base/java.nio=ALL-UNNAMED', '-Xmx1024M']
+    args = ['ipc:tsurugi', '8', 'createDB']
+
+    systemProperty 'com.tsurugidb.tsubakuro.jniverify', 'false'
+
+    systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
+    systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'
+    systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
+    systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
+}
+
+tasks.register('runYCSBlikeBench', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tsurugidb.tsubakuro.kvs.ycsb.YCSBlikeBenchmark'
+    jvmArgs = ['--add-opens=java.base/java.nio=ALL-UNNAMED', '-Xmx1024M']
+    args = ['ipc:tsurugi', '1,2,4,8', '50', '10', '30']
+
+    systemProperty 'com.tsurugidb.tsubakuro.jniverify', 'false'
+
+    systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
+    systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'
+    systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
+    systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
+}
+
+tasks.register('runYCSBlikeBenchBySql', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tsurugidb.tsubakuro.kvs.ycsb.YCSBlikeBenchmark'
+    jvmArgs = ['--add-opens=java.base/java.nio=ALL-UNNAMED', '-Xmx1024M', '-DuseSqlClient=true']
+    args = ['ipc:tsurugi', '1,2,4,8', '50', '10', '30']
+
+    systemProperty 'com.tsurugidb.tsubakuro.jniverify', 'false'
+
+    systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
+    systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'
+    systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
+    systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
+}
