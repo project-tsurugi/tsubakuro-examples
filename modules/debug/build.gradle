@@ -1,0 +1,21 @@
+plugins {
+    id 'tsubakuro-examples.app-conventions'
+}
+
+dependencies {
+    implementation "com.tsurugidb.tsubakuro:tsubakuro-debug:${tsubakuroVersion}"
+}
+
+tasks.register('runDebugClientExample', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tsurugidb.tsubakuro.debug.example.DebugClientExample'
+    args = ['<<<Tsubakuro DebugClient Test Message>>>']
+
+    systemProperty 'com.tsurugidb.tsubakuro.jniverify', 'false'
+    systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'ipc:tsurugi'
+
+    systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
+    systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'
+    systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
+    systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
+}
