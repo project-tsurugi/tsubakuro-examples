@@ -18,7 +18,7 @@ class PutTest extends TestBase {
     private static final String KEY_NAME = "k1";
     private static final String VALUE_NAME = "v1";
 
-    public PutTest() throws Exception {
+    PutTest() throws Exception {
         String schema = String.format("%s BIGINT PRIMARY KEY, %s BIGINT", KEY_NAME, VALUE_NAME);
         createTable(TABLE_NAME, schema);
     }
@@ -32,7 +32,7 @@ class PutTest extends TestBase {
             // COLUMN_TYPE_MISMATCH
             try (var tx = kvs.beginTransaction().await()) {
                 buffer.clear();
-                buffer.add(KEY_NAME, (int)key1);
+                buffer.add(KEY_NAME, (int) key1);
                 buffer.add(VALUE_NAME, value1);
                 KvsServiceException ex = assertThrows(KvsServiceException.class,
                         () -> kvs.put(tx, TABLE_NAME, buffer, PutType.OVERWRITE).await());
@@ -42,7 +42,7 @@ class PutTest extends TestBase {
             try (var tx = kvs.beginTransaction().await()) {
                 buffer.clear();
                 buffer.add(KEY_NAME, key1);
-                buffer.add(VALUE_NAME, (int)value1);
+                buffer.add(VALUE_NAME, (int) value1);
                 KvsServiceException ex = assertThrows(KvsServiceException.class,
                         () -> kvs.put(tx, TABLE_NAME, buffer, PutType.OVERWRITE).await());
                 assertEquals(KvsServiceCode.COLUMN_TYPE_MISMATCH, ex.getDiagnosticCode());
@@ -50,8 +50,8 @@ class PutTest extends TestBase {
             }
             try (var tx = kvs.beginTransaction().await()) {
                 buffer.clear();
-                buffer.add(KEY_NAME, (int)key1);
-                buffer.add(VALUE_NAME, (int)value1);
+                buffer.add(KEY_NAME, (int) key1);
+                buffer.add(VALUE_NAME, (int) value1);
                 KvsServiceException ex = assertThrows(KvsServiceException.class,
                         () -> kvs.put(tx, TABLE_NAME, buffer, PutType.OVERWRITE).await());
                 assertEquals(KvsServiceCode.COLUMN_TYPE_MISMATCH, ex.getDiagnosticCode());

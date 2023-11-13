@@ -19,7 +19,7 @@ class PutMultiValuesTest extends TestBase {
     private static final String VALUE1_NAME = "v1";
     private static final String VALUE2_NAME = "v2";
 
-    public PutMultiValuesTest() throws Exception {
+    PutMultiValuesTest() throws Exception {
         String schema = String.format("%s BIGINT PRIMARY KEY, %s BIGINT, %s BIGINT", KEY_NAME, VALUE1_NAME,
                 VALUE2_NAME);
         createTable(TABLE_NAME, schema);
