@@ -17,7 +17,7 @@ class SecondaryIndexTableTest extends TestBase {
     private static final String KEY_NAME = "k1";
     private static final String VALUE_NAME = "v1";
 
-    public SecondaryIndexTableTest() throws Exception {
+    SecondaryIndexTableTest() throws Exception {
         String schema = String.format("%s BIGINT PRIMARY KEY, %s BIGINT", KEY_NAME, VALUE_NAME);
         createTable(TABLE_NAME, schema);
         String sql = String.format("CREATE INDEX %s on %s(%s)", "index" + VALUE_NAME, TABLE_NAME, VALUE_NAME);

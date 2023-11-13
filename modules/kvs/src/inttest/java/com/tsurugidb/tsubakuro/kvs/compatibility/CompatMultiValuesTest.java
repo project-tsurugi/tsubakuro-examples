@@ -13,7 +13,7 @@ class CompatMultiValuesTest extends CompatBase {
 
     private static final String TABLE_NAME = "table" + CompatMultiValuesTest.class.getSimpleName();
 
-    public CompatMultiValuesTest() throws Exception {
+    CompatMultiValuesTest() throws Exception {
         super(TABLE_NAME);
     }
 

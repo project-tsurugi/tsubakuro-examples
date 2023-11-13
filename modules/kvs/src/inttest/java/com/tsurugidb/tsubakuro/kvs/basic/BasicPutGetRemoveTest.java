@@ -17,7 +17,7 @@ class BasicPutGetRemoveTest extends TestBase {
     private static final String KEY_NAME = "k1";
     private static final String VALUE_NAME = "v1";
 
-    public BasicPutGetRemoveTest() throws Exception {
+    BasicPutGetRemoveTest() throws Exception {
         String schema = String.format("%s BIGINT PRIMARY KEY, %s BIGINT", KEY_NAME, VALUE_NAME);
         createTable(TABLE_NAME, schema);
     }

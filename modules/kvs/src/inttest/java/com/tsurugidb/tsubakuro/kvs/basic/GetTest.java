@@ -17,7 +17,7 @@ class GetTest extends TestBase {
     private static final String KEY_NAME = "k1";
     private static final String VALUE_NAME = "v1";
 
-    public GetTest() throws Exception {
+    GetTest() throws Exception {
         String schema = String.format("%s BIGINT PRIMARY KEY, %s BIGINT", KEY_NAME, VALUE_NAME);
         createTable(TABLE_NAME, schema);
     }
@@ -30,7 +30,7 @@ class GetTest extends TestBase {
             // COLUMN_TYPE_MISMATCH
             try (var tx = kvs.beginTransaction().await()) {
                 key.clear();
-                key.add(KEY_NAME, (int)key1);
+                key.add(KEY_NAME, (int) key1);
                 KvsServiceException ex = assertThrows(KvsServiceException.class,
                         () -> kvs.get(tx, TABLE_NAME, key).await());
                 assertEquals(KvsServiceCode.COLUMN_TYPE_MISMATCH, ex.getDiagnosticCode());
