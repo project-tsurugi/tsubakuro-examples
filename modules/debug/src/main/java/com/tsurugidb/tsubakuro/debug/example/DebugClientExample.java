@@ -23,10 +23,10 @@ public class DebugClientExample {
     private void output() throws Exception {
         try (var session = SessionBuilder.connect(endpoint).withCredential(NullCredential.INSTANCE).create();
                 var debug = DebugClient.attach(session)) {
-            debug.logging(message);
-            debug.logging(LogLevel.INFO, message);
-            debug.logging(LogLevel.WARN, message);
-            debug.logging(LogLevel.ERROR, message);
+            debug.logging(message).await();
+            debug.logging(LogLevel.INFO, message).await();
+            debug.logging(LogLevel.WARN, message).await();
+            debug.logging(LogLevel.ERROR, message).await();
         }
     }
 
