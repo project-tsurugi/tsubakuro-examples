@@ -54,3 +54,16 @@ tasks.register('run345', JavaExec) {
     systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
     systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
 }
+
+
+tasks.register('run406', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tsurugidb.tsubakuro.examples.connectRace.Main'
+
+    systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'ipc:tsurugi'
+
+    systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
+    systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'
+    systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
+    systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
+}
