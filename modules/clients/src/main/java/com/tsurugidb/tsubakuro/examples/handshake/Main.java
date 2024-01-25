@@ -9,7 +9,7 @@ public final class Main {
 
     public static void main(String[] args) {
         try {
-            CreateTable.doCreateTable(url);
+            Client.doClient(url);
         } catch (IOException | ServerException | InterruptedException e) {
             System.out.println(e);
             e.printStackTrace();
