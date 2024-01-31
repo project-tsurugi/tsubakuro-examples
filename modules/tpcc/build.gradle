@@ -15,11 +15,10 @@ tasks.register('runTpcc', JavaExec) {
     systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
 }
 
-startScripts {
+application {
     applicationName = 'tpcc'
     mainClass = 'com.tsurugidb.tsubakuro.examples.tpcc.Main'
     applicationDefaultJvmArgs = [
-        '-Dcom.tsurugidb.tsubakuro.jniverify=false',
         '-Dtsurugi.dbname=ipc:tsurugi'
     ]
 }

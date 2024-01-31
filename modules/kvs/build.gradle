@@ -26,6 +26,8 @@ sourceSets {
     }
 }
 
+spotbugsKvsIntegrationTest.enabled = false
+
 configurations {
     kvsIntegrationTestImplementation.extendsFrom testImplementation
     kvsIntegrationTestRuntime.extendsFrom testRuntime
