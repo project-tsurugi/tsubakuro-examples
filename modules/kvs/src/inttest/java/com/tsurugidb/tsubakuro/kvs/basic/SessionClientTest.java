@@ -2,28 +2,30 @@ package com.tsurugidb.tsubakuro.kvs.basic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.tsurugidb.tsubakuro.kvs.KvsClient;
 import com.tsurugidb.tsubakuro.kvs.RecordBuffer;
-import com.tsurugidb.tsubakuro.kvs.util.TestBase;
+import com.tsurugidb.tsubakuro.kvs.util.Utils;
 
-class SessionClientTest extends TestBase {
+class SessionClientTest {
 
     private static final String TABLE_NAME = "table" + SessionClientTest.class.getSimpleName();
     private static final String KEY_NAME = "k1";
     private static final String VALUE_NAME = "v1";
 
-    SessionClientTest() throws Exception {
+    @BeforeAll
+    static void setup() throws Exception {
         String schema = String.format("%s BIGINT PRIMARY KEY, %s BIGINT", KEY_NAME, VALUE_NAME);
-        createTable(TABLE_NAME, schema);
+        Utils.createTable(TABLE_NAME, schema);
     }
 
     @Test
     public void reuseSession() throws Exception {
         final long key1 = 1L;
         final long value1 = 100L;
-        try (var session = getNewSession()) {
+        try (var session = Utils.getNewSession()) {
             try (var kvs = KvsClient.attach(session)) {
                 try (var tx = kvs.beginTransaction().await()) {
                     RecordBuffer buffer = new RecordBuffer();
@@ -57,7 +59,7 @@ class SessionClientTest extends TestBase {
 
     @Test
     public void recloses() throws Exception {
-        try (var session = getNewSession()) {
+        try (var session = Utils.getNewSession()) {
             try (var kvs = KvsClient.attach(session)) {
                 try (var tx = kvs.beginTransaction().await()) {
                     tx.close();
@@ -73,7 +75,7 @@ class SessionClientTest extends TestBase {
         final long key1 = 1L;
         final long value1 = 100L;
         final long value2 = 101L;
-        try (var session = getNewSession()) {
+        try (var session = Utils.getNewSession()) {
             try (var kvs = KvsClient.attach(session)) {
                 try (var tx = kvs.beginTransaction().await()) {
                     RecordBuffer buffer = new RecordBuffer();

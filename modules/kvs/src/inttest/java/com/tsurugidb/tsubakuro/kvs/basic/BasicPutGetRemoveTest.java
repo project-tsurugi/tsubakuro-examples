@@ -2,6 +2,7 @@ package com.tsurugidb.tsubakuro.kvs.basic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.tsurugidb.tsubakuro.kvs.KvsClient;
@@ -9,17 +10,18 @@ import com.tsurugidb.tsubakuro.kvs.PutType;
 import com.tsurugidb.tsubakuro.kvs.Record;
 import com.tsurugidb.tsubakuro.kvs.RecordBuffer;
 import com.tsurugidb.tsubakuro.kvs.RemoveType;
-import com.tsurugidb.tsubakuro.kvs.util.TestBase;
+import com.tsurugidb.tsubakuro.kvs.util.Utils;
 
-class BasicPutGetRemoveTest extends TestBase {
+class BasicPutGetRemoveTest {
 
     private static final String TABLE_NAME = "table" + BasicPutGetRemoveTest.class.getSimpleName();
     private static final String KEY_NAME = "k1";
     private static final String VALUE_NAME = "v1";
 
-    BasicPutGetRemoveTest() throws Exception {
+    @BeforeAll
+    static void setup() throws Exception {
         String schema = String.format("%s BIGINT PRIMARY KEY, %s BIGINT", KEY_NAME, VALUE_NAME);
-        createTable(TABLE_NAME, schema);
+        Utils.createTable(TABLE_NAME, schema);
     }
 
     private static void checkRecord(Record record, long key1, long value1) throws Exception {
@@ -37,7 +39,7 @@ class BasicPutGetRemoveTest extends TestBase {
     public void basicPutGetRemove() throws Exception {
         final long key1 = 1L;
         final long value1 = 100L;
-        try (var session = getNewSession(); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var kvs = KvsClient.attach(session)) {
             try (var tx = kvs.beginTransaction().await()) {
                 RecordBuffer buffer = new RecordBuffer();
                 buffer.add(KEY_NAME, key1);
@@ -77,7 +79,7 @@ class BasicPutGetRemoveTest extends TestBase {
         final long value2 = 201L;
         final long value3 = 202L;
         RecordBuffer buffer = new RecordBuffer();
-        try (var session = getNewSession(); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var kvs = KvsClient.attach(session)) {
             // {}; add initial (key1, value1)
             try (var tx = kvs.beginTransaction().await()) {
                 buffer.add(KEY_NAME, key1);
@@ -223,7 +225,7 @@ class BasicPutGetRemoveTest extends TestBase {
         final long key2 = 3L;
         final long value = 100L;
         RecordBuffer buffer = new RecordBuffer();
-        try (var session = getNewSession(); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var kvs = KvsClient.attach(session)) {
             try (var tx = kvs.beginTransaction().await()) {
                 buffer.add(KEY_NAME, key1);
                 buffer.add(VALUE_NAME, value);

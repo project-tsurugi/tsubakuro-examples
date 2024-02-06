@@ -3,30 +3,32 @@ package com.tsurugidb.tsubakuro.kvs.basic;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.tsurugidb.tsubakuro.kvs.KvsClient;
 import com.tsurugidb.tsubakuro.kvs.KvsServiceCode;
 import com.tsurugidb.tsubakuro.kvs.KvsServiceException;
 import com.tsurugidb.tsubakuro.kvs.RecordBuffer;
-import com.tsurugidb.tsubakuro.kvs.util.TestBase;
+import com.tsurugidb.tsubakuro.kvs.util.Utils;
 
-class RemoveTest extends TestBase {
+class RemoveTest {
 
     private static final String TABLE_NAME = "table" + RemoveTest.class.getSimpleName();
     private static final String KEY_NAME = "k1";
     private static final String VALUE_NAME = "v1";
 
-    RemoveTest() throws Exception {
+    @BeforeAll
+    static void setup() throws Exception {
         String schema = String.format("%s BIGINT PRIMARY KEY, %s BIGINT", KEY_NAME, VALUE_NAME);
-        createTable(TABLE_NAME, schema);
+        Utils.createTable(TABLE_NAME, schema);
     }
 
     @Test
     public void invalidRequests() throws Exception {
         final long key1 = 1L;
         RecordBuffer key = new RecordBuffer();
-        try (var session = getNewSession(); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var kvs = KvsClient.attach(session)) {
             // COLUMN_TYPE_MISMATCH
             try (var tx = kvs.beginTransaction().await()) {
                 key.clear();

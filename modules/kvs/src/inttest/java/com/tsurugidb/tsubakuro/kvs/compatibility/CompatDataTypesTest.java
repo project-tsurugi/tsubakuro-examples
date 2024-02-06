@@ -13,6 +13,7 @@ import com.tsurugidb.kvs.proto.KvsData;
 import com.tsurugidb.tsubakuro.kvs.KvsClient;
 import com.tsurugidb.tsubakuro.kvs.RecordBuffer;
 import com.tsurugidb.tsubakuro.kvs.Values;
+import com.tsurugidb.tsubakuro.kvs.util.Utils;
 import com.tsurugidb.tsubakuro.sql.SqlClient;
 
 class CompatDataTypesTest extends CompatBase {
@@ -25,7 +26,7 @@ class CompatDataTypesTest extends CompatBase {
     }
 
     private void checkNonNull(SqlValue key1, SqlValue value1, SqlValue key2, SqlValue value2) throws Exception {
-        try (var session = getNewSession(); var sql = SqlClient.attach(session); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var sql = SqlClient.attach(session); var kvs = KvsClient.attach(session)) {
             // SQL INSERT
             try (var tx = sql.createTransaction().await()) {
                 var st = String.format("INSERT INTO %s (%s, %s) VALUES(%s, %s)", TABLE_NAME, KEY_NAME, VALUE_NAME,
@@ -91,7 +92,7 @@ class CompatDataTypesTest extends CompatBase {
     }
 
     private void checkWithNull(SqlValue key1, SqlValue value1, SqlValue key2, SqlValue value2) throws Exception {
-        try (var session = getNewSession(); var sql = SqlClient.attach(session); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var sql = SqlClient.attach(session); var kvs = KvsClient.attach(session)) {
             // SQL INSERT (value is null)
             try (var tx = sql.createTransaction().await()) {
                 var st = String.format("INSERT INTO %s (%s) VALUES(%s)", TABLE_NAME, KEY_NAME, key1.str);
@@ -190,7 +191,7 @@ class CompatDataTypesTest extends CompatBase {
     private void checkDataType(String typeName, KvsData.Value key1, KvsData.Value value1, KvsData.Value key2,
             KvsData.Value value2) throws Exception {
         // see jogasaki/docs/value_limit.md
-        createTable(TABLE_NAME, schema(typeName));
+        Utils.createTable(TABLE_NAME, schema(typeName));
         check(typeName, key1, value1, key2, value2);
     }
 
