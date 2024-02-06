@@ -7,25 +7,26 @@ import org.junit.jupiter.api.Test;
 import com.tsurugidb.tsubakuro.kvs.KvsClient;
 import com.tsurugidb.tsubakuro.kvs.RecordBuffer;
 import com.tsurugidb.tsubakuro.kvs.Values;
+import com.tsurugidb.tsubakuro.kvs.util.Utils;
 import com.tsurugidb.tsubakuro.sql.SqlClient;
 
 class CompatMultiValuesTest extends CompatBase {
 
     private static final String TABLE_NAME = "table" + CompatMultiValuesTest.class.getSimpleName();
 
-    CompatMultiValuesTest() throws Exception {
+    CompatMultiValuesTest() {
         super(TABLE_NAME);
     }
 
     @Test
     public void basic() throws Exception {
         String typeName = "bigint";
-        createTable(TABLE_NAME, schemaV2(typeName));
+        Utils.createTable(TABLE_NAME, schemaV2(typeName));
         final SqlValue key1 = new SqlValue(typeName, Values.of(1L));
         final SqlValue key2 = new SqlValue(typeName, Values.of(2L));
         final SqlValue value1 = new SqlValue(typeName, Values.of(100L));
         final SqlValue value2 = new SqlValue(typeName, Values.of(200L));
-        try (var session = getNewSession(); var sql = SqlClient.attach(session); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var sql = SqlClient.attach(session); var kvs = KvsClient.attach(session)) {
             // SQL INSERT
             try (var tx = sql.createTransaction().await()) {
                 var st = String.format("INSERT INTO %s (%s, %s, %s) VALUES(%s, %s, %s)", TABLE_NAME, KEY_NAME,

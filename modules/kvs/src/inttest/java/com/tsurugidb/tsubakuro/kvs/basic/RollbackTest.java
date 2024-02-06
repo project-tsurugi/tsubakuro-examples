@@ -3,6 +3,7 @@ package com.tsurugidb.tsubakuro.kvs.basic;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.tsurugidb.tsubakuro.kvs.KvsClient;
@@ -10,17 +11,18 @@ import com.tsurugidb.tsubakuro.kvs.KvsServiceCode;
 import com.tsurugidb.tsubakuro.kvs.KvsServiceException;
 import com.tsurugidb.tsubakuro.kvs.PutType;
 import com.tsurugidb.tsubakuro.kvs.RecordBuffer;
-import com.tsurugidb.tsubakuro.kvs.util.TestBase;
+import com.tsurugidb.tsubakuro.kvs.util.Utils;
 
-class RollbackTest extends TestBase {
+class RollbackTest {
 
     private static final String TABLE_NAME = "table" + RollbackTest.class.getSimpleName();
     private static final String KEY_NAME = "k1";
     private static final String VALUE_NAME = "v1";
 
-    RollbackTest() throws Exception {
+    @BeforeAll
+    static void setup() throws Exception {
         String schema = String.format("%s BIGINT PRIMARY KEY, %s BIGINT", KEY_NAME, VALUE_NAME);
-        createTable(TABLE_NAME, schema);
+        Utils.createTable(TABLE_NAME, schema);
     }
 
     @Test
@@ -29,7 +31,7 @@ class RollbackTest extends TestBase {
         final long value1 = 100L;
         final long value2 = 200L;
         RecordBuffer buffer = new RecordBuffer();
-        try (var session = getNewSession(); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var kvs = KvsClient.attach(session)) {
             // initial insert
             try (var tx = kvs.beginTransaction().await()) {
                 buffer.add(KEY_NAME, key1);
@@ -90,7 +92,7 @@ class RollbackTest extends TestBase {
 
     @Test
     public void multiRollback() throws Exception {
-        try (var session = getNewSession(); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var kvs = KvsClient.attach(session)) {
             try (var tx = kvs.beginTransaction().await()) {
                 RecordBuffer buffer = new RecordBuffer();
                 buffer.add(KEY_NAME, 1L);
@@ -108,7 +110,7 @@ class RollbackTest extends TestBase {
 
     @Test
     public void opsAfterRollback() throws Exception {
-        try (var session = getNewSession(); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var kvs = KvsClient.attach(session)) {
             try (var tx = kvs.beginTransaction().await()) {
                 RecordBuffer buffer = new RecordBuffer();
                 buffer.add(KEY_NAME, 1L);

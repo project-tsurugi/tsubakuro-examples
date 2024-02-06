@@ -8,9 +8,9 @@ import com.tsurugidb.tsubakuro.kvs.KvsClient;
 import com.tsurugidb.tsubakuro.kvs.RecordBuffer;
 import com.tsurugidb.tsubakuro.kvs.ScanBound;
 import com.tsurugidb.tsubakuro.kvs.ScanType;
-import com.tsurugidb.tsubakuro.kvs.util.TestBase;
+import com.tsurugidb.tsubakuro.kvs.util.Utils;
 
-class ScanTest extends TestBase {
+class ScanTest {
 
     private static final String TABLE_NAME = "table" + ScanTest.class.getSimpleName();
 
@@ -21,7 +21,7 @@ class ScanTest extends TestBase {
         RecordBuffer upperKey = new RecordBuffer();
         ScanBound upperBound = ScanBound.INCLUSIVE;
         ScanType behavior = ScanType.FORWARD;
-        try (var session = getNewSession(); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var kvs = KvsClient.attach(session)) {
             try (var tx = kvs.beginTransaction().await()) {
                 assertThrows(UnsupportedOperationException.class,
                         () -> kvs.scan(tx, TABLE_NAME, lowerKey, lowerBound, upperKey, upperBound, behavior).await());

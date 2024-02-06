@@ -19,9 +19,9 @@ import com.tsurugidb.tsubakuro.kvs.KvsServiceException;
 import com.tsurugidb.tsubakuro.kvs.Record;
 import com.tsurugidb.tsubakuro.kvs.RecordBuffer;
 import com.tsurugidb.tsubakuro.kvs.Values;
-import com.tsurugidb.tsubakuro.kvs.util.TestBase;
+import com.tsurugidb.tsubakuro.kvs.util.Utils;
 
-class DataTypesTest extends TestBase {
+class DataTypesTest {
 
     private static final String TABLE_NAME = "table" + DataTypesTest.class.getSimpleName();
     private static final String KEY_NAME = "k1";
@@ -30,7 +30,7 @@ class DataTypesTest extends TestBase {
     private static final int DECIMAL_SCALE = 2;
 
     private static BigDecimal toBigDecimal(KvsData.Value v) {
-        return toBigDecimal(v, DECIMAL_SCALE);
+        return Utils.toBigDecimal(v, DECIMAL_SCALE);
     }
 
     private static void checkValue(KvsData.Value expected, KvsData.Value value) throws Exception {
@@ -58,7 +58,7 @@ class DataTypesTest extends TestBase {
 
     private static void checkPutGet(KvsData.Value key1, KvsData.Value value1) throws Exception {
         RecordBuffer buffer = new RecordBuffer();
-        try (var session = getNewSession(); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var kvs = KvsClient.attach(session)) {
             try (var tx = kvs.beginTransaction().await()) {
                 buffer.add(KEY_NAME, key1);
                 buffer.add(VALUE_NAME, value1);
@@ -79,7 +79,7 @@ class DataTypesTest extends TestBase {
 
     private static void checkPutNG(KvsData.Value key1, KvsData.Value value1, KvsServiceCode code) throws Exception {
         RecordBuffer buffer = new RecordBuffer();
-        try (var session = getNewSession(); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var kvs = KvsClient.attach(session)) {
             try (var tx = kvs.beginTransaction().await()) {
                 buffer.add(KEY_NAME, key1);
                 buffer.add(VALUE_NAME, value1);
@@ -96,9 +96,9 @@ class DataTypesTest extends TestBase {
         return String.format("%s %s PRIMARY KEY, %s %s", KEY_NAME, typeName, VALUE_NAME, typeName);
     }
 
-    private void checkDataType(String typeName, KvsData.Value key1, KvsData.Value value1) throws Exception {
+    private static void checkDataType(String typeName, KvsData.Value key1, KvsData.Value value1) throws Exception {
         // see jogasaki/docs/value_limit.md
-        createTable(TABLE_NAME, schema(typeName));
+        Utils.createTable(TABLE_NAME, schema(typeName));
         checkPutGet(key1, value1);
     }
 
@@ -142,7 +142,7 @@ class DataTypesTest extends TestBase {
     public void char10Test() throws Exception {
         final String key1 = "1234567890"; // OK
         final String value1 = "abcdefghij"; // OK
-        createTable(TABLE_NAME, schema("char(10)"));
+        Utils.createTable(TABLE_NAME, schema("char(10)"));
         checkPutGet(Values.of(key1), Values.of(value1));
         //
         checkPutGet(Values.of(""), Values.of(""));
@@ -161,7 +161,7 @@ class DataTypesTest extends TestBase {
     public void varchar10Test() throws Exception {
         final String key1 = "1234567890"; // OK
         final String value1 = "abcdefghij"; // OK
-        createTable(TABLE_NAME, schema("varchar(10)"));
+        Utils.createTable(TABLE_NAME, schema("varchar(10)"));
         checkPutGet(Values.of(key1), Values.of(value1));
         //
         checkPutGet(Values.of(""), Values.of(""));
@@ -194,7 +194,7 @@ class DataTypesTest extends TestBase {
     public void decimalScaleTest() throws Exception {
         final BigDecimal key1 = new BigDecimal("12.34");
         final BigDecimal value1 = new BigDecimal("56.78");
-        createTable(TABLE_NAME, schema("decimal(4," + DECIMAL_SCALE + ")"));
+        Utils.createTable(TABLE_NAME, schema("decimal(4," + DECIMAL_SCALE + ")"));
         checkPutGet(Values.of(key1), Values.of(value1));
         // OK: too short integer part
         checkPutGet(Values.of(new BigDecimal("1.45")), Values.of(new BigDecimal("5.67")));

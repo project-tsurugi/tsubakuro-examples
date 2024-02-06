@@ -13,7 +13,7 @@ import com.tsurugidb.tsubakuro.sql.SqlClient;
 /**
  * The base class for integration test class.
  */
-public class TestBase {
+public final class Utils {
 
     private static final String SYSPROP_KVSTEST_ENDPOINT = "tsurugi.kvstest.endpoint";
     private static final URI ENDPOINT;
@@ -22,6 +22,9 @@ public class TestBase {
         String uri = System.getProperty(SYSPROP_KVSTEST_ENDPOINT, "ipc:tsurugi");
         ENDPOINT = URI.create(uri);
         System.err.println("endpoint=" + ENDPOINT);
+    }
+
+    private Utils() {
     }
 
     /**
@@ -54,7 +57,7 @@ public class TestBase {
      * @throws Exception failed to drop the table
      * @note exception doesn't throw even if the table doesn't exists
      */
-    public void dropTable(String tableName) throws Exception {
+    public static void dropTable(String tableName) throws Exception {
         try (var session = getNewSession(); var client = SqlClient.attach(session)) {
             dropTable(client, tableName);
         }
@@ -66,7 +69,7 @@ public class TestBase {
      * @param schema the schema of the table
      * @throws Exception failed to create a new table
      */
-    public void createTable(String tableName, String schema) throws Exception {
+    public static void createTable(String tableName, String schema) throws Exception {
         try (var session = getNewSession(); var client = SqlClient.attach(session)) {
             dropTable(client, tableName);
             try (var tx = client.createTransaction().await()) {
@@ -83,7 +86,7 @@ public class TestBase {
      * @param sql SQL statement
      * @throws Exception failed to execute the SQL statement
      */
-    public void executeStatement(String sql) throws Exception {
+    public static void executeStatement(String sql) throws Exception {
         try (var session = getNewSession(); var client = SqlClient.attach(session)) {
             try (var tx = client.createTransaction().await()) {
                 tx.executeStatement(sql).await();

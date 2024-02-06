@@ -6,14 +6,14 @@ import org.junit.jupiter.api.Test;
 
 import com.tsurugidb.tsubakuro.kvs.BatchScript;
 import com.tsurugidb.tsubakuro.kvs.KvsClient;
-import com.tsurugidb.tsubakuro.kvs.util.TestBase;
+import com.tsurugidb.tsubakuro.kvs.util.Utils;
 
-class BatchTest extends TestBase {
+class BatchTest {
 
     @Test
     public void notSupportedYet() throws Exception {
         BatchScript script = new BatchScript();
-        try (var session = getNewSession(); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var kvs = KvsClient.attach(session)) {
             try (var tx = kvs.beginTransaction().await()) {
                 assertThrows(UnsupportedOperationException.class, () -> kvs.batch(tx, script).await());
                 kvs.rollback(tx).await();

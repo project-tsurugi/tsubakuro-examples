@@ -13,11 +13,11 @@ import com.tsurugidb.tsubakuro.kvs.Record;
 import com.tsurugidb.tsubakuro.kvs.RecordBuffer;
 import com.tsurugidb.tsubakuro.kvs.Values;
 import com.tsurugidb.tsubakuro.kvs.impl.GetResultImpl;
-import com.tsurugidb.tsubakuro.kvs.util.TestBase;
+import com.tsurugidb.tsubakuro.kvs.util.Utils;
 import com.tsurugidb.tsubakuro.sql.ResultSet;
 import com.tsurugidb.tsubakuro.sql.SqlClient;
 
-class CompatBase extends TestBase {
+class CompatBase {
 
     final String tableName;
     final int decimalScale;
@@ -95,7 +95,7 @@ class CompatBase extends TestBase {
     }
 
     private BigDecimal toBigDecimal(KvsData.Value v) {
-        return toBigDecimal(v, decimalScale);
+        return Utils.toBigDecimal(v, decimalScale);
     }
 
     private void checkValue(KvsData.Value expected, KvsData.Value value) throws Exception {

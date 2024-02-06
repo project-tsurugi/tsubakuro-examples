@@ -8,18 +8,18 @@ import org.junit.jupiter.api.Test;
 
 import com.tsurugidb.tsubakuro.kvs.KvsClient;
 import com.tsurugidb.tsubakuro.kvs.RecordBuffer;
-import com.tsurugidb.tsubakuro.kvs.util.TestBase;
+import com.tsurugidb.tsubakuro.kvs.util.Utils;
 import com.tsurugidb.tsubakuro.sql.SqlClient;
 
-class BasicTest extends TestBase {
+class BasicTest {
 
     private static final String TABLE_NAME = "table" + BasicTest.class.getSimpleName();
     private static final String KEY_NAME = "k1";
     private static final String VALUE_NAME = "v1";
 
-    private void createTable() throws Exception {
+    private static void createTable() throws Exception {
         String schema = String.format("%s BIGINT PRIMARY KEY, %s BIGINT", KEY_NAME, VALUE_NAME);
-        createTable(TABLE_NAME, schema);
+        Utils.createTable(TABLE_NAME, schema);
     }
 
     private static void checkSQLrecord(SqlClient sql, long key, long value) throws Exception {
@@ -135,7 +135,7 @@ class BasicTest extends TestBase {
         final long value1 = 100L;
         final long key2 = 2L;
         final long value2 = 200L;
-        try (var session = getNewSession(); var sql = SqlClient.attach(session); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var sql = SqlClient.attach(session); var kvs = KvsClient.attach(session)) {
             // SQL INSERT
             try (var tx = sql.createTransaction().await()) {
                 var st = String.format("INSERT INTO %s (%s, %s) VALUES(%d, %d)", TABLE_NAME, KEY_NAME, VALUE_NAME, key1,
@@ -207,7 +207,7 @@ class BasicTest extends TestBase {
         final long value1 = 100L;
         final long key2 = 2L;
         final long value2 = 200L;
-        try (var session = getNewSession(); var sql = SqlClient.attach(session); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var sql = SqlClient.attach(session); var kvs = KvsClient.attach(session)) {
             // SQL INSERT (value is null)
             try (var tx = sql.createTransaction().await()) {
                 var st = String.format("INSERT INTO %s (%s) VALUES(%d)", TABLE_NAME, KEY_NAME, key1);

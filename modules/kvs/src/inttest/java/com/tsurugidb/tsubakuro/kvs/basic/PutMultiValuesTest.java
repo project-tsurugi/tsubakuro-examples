@@ -3,6 +3,7 @@ package com.tsurugidb.tsubakuro.kvs.basic;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.tsurugidb.tsubakuro.kvs.KvsClient;
@@ -10,19 +11,20 @@ import com.tsurugidb.tsubakuro.kvs.KvsServiceCode;
 import com.tsurugidb.tsubakuro.kvs.KvsServiceException;
 import com.tsurugidb.tsubakuro.kvs.Record;
 import com.tsurugidb.tsubakuro.kvs.RecordBuffer;
-import com.tsurugidb.tsubakuro.kvs.util.TestBase;
+import com.tsurugidb.tsubakuro.kvs.util.Utils;
 
-class PutMultiValuesTest extends TestBase {
+class PutMultiValuesTest {
 
     private static final String TABLE_NAME = "table" + PutMultiValuesTest.class.getSimpleName();
     private static final String KEY_NAME = "k1";
     private static final String VALUE1_NAME = "v1";
     private static final String VALUE2_NAME = "v2";
 
-    PutMultiValuesTest() throws Exception {
+    @BeforeAll
+    static void setup() throws Exception {
         String schema = String.format("%s BIGINT PRIMARY KEY, %s BIGINT, %s BIGINT", KEY_NAME, VALUE1_NAME,
                 VALUE2_NAME);
-        createTable(TABLE_NAME, schema);
+        Utils.createTable(TABLE_NAME, schema);
     }
 
     private static void checkRecord(Record record, long key1, long value1, long value2) throws Exception {
@@ -45,7 +47,7 @@ class PutMultiValuesTest extends TestBase {
         final long key1 = 1L;
         final long value1 = 100L;
         final long value2 = 101L;
-        try (var session = getNewSession(); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var kvs = KvsClient.attach(session)) {
             try (var tx = kvs.beginTransaction().await()) {
                 RecordBuffer buffer = new RecordBuffer();
                 buffer.add(KEY_NAME, key1);
@@ -82,7 +84,7 @@ class PutMultiValuesTest extends TestBase {
         final long key1 = 1L;
         final long value1 = 100L;
         final long value2 = 101L;
-        try (var session = getNewSession(); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var kvs = KvsClient.attach(session)) {
             try (var tx = kvs.beginTransaction().await()) {
                 RecordBuffer buffer = new RecordBuffer();
                 buffer.add(VALUE1_NAME, value2);
@@ -141,7 +143,7 @@ class PutMultiValuesTest extends TestBase {
         final long value1 = 100L;
         final long value2 = 101L;
         RecordBuffer buffer = new RecordBuffer();
-        try (var session = getNewSession(); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var kvs = KvsClient.attach(session)) {
             try (var tx = kvs.beginTransaction().await()) {
                 buffer.add(KEY_NAME, key1);
                 buffer.add(VALUE1_NAME, value1);

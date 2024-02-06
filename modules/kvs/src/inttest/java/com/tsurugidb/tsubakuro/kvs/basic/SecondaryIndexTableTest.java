@@ -3,32 +3,34 @@ package com.tsurugidb.tsubakuro.kvs.basic;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.tsurugidb.tsubakuro.kvs.KvsClient;
 import com.tsurugidb.tsubakuro.kvs.KvsServiceCode;
 import com.tsurugidb.tsubakuro.kvs.KvsServiceException;
 import com.tsurugidb.tsubakuro.kvs.RecordBuffer;
-import com.tsurugidb.tsubakuro.kvs.util.TestBase;
+import com.tsurugidb.tsubakuro.kvs.util.Utils;
 
-class SecondaryIndexTableTest extends TestBase {
+class SecondaryIndexTableTest {
 
     private static final String TABLE_NAME = "table" + SecondaryIndexTableTest.class.getSimpleName();
     private static final String KEY_NAME = "k1";
     private static final String VALUE_NAME = "v1";
 
-    SecondaryIndexTableTest() throws Exception {
+    @BeforeAll
+    static void setup() throws Exception {
         String schema = String.format("%s BIGINT PRIMARY KEY, %s BIGINT", KEY_NAME, VALUE_NAME);
-        createTable(TABLE_NAME, schema);
+        Utils.createTable(TABLE_NAME, schema);
         String sql = String.format("CREATE INDEX %s on %s(%s)", "index" + VALUE_NAME, TABLE_NAME, VALUE_NAME);
-        executeStatement(sql);
+        Utils.executeStatement(sql);
     }
 
     @Test
     public void basicPutGetRemove() throws Exception {
         final long key1 = 1L;
         final long value1 = 100L;
-        try (var session = getNewSession(); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var kvs = KvsClient.attach(session)) {
             try (var tx = kvs.beginTransaction().await()) {
                 RecordBuffer buffer = new RecordBuffer();
                 buffer.add(KEY_NAME, key1);
@@ -37,7 +39,7 @@ class SecondaryIndexTableTest extends TestBase {
                     kvs.put(tx, TABLE_NAME, buffer).await();
                 });
                 assertEquals(KvsServiceCode.NOT_IMPLEMENTED, ex.getDiagnosticCode());
-                System.err.println(getLineNumber() + "\t" + ex.getMessage());
+                System.err.println(Utils.getLineNumber() + "\t" + ex.getMessage());
                 kvs.rollback(tx).await();
             }
             RecordBuffer keyBuffer = new RecordBuffer();
@@ -54,7 +56,7 @@ class SecondaryIndexTableTest extends TestBase {
                     kvs.remove(tx, TABLE_NAME, keyBuffer).await();
                 });
                 assertEquals(KvsServiceCode.NOT_IMPLEMENTED, ex.getDiagnosticCode());
-                System.err.println(getLineNumber() + "\t" + ex.getMessage());
+                System.err.println(Utils.getLineNumber() + "\t" + ex.getMessage());
                 kvs.rollback(tx).await();
             }
         }

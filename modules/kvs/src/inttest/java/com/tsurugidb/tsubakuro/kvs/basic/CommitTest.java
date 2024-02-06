@@ -3,6 +3,7 @@ package com.tsurugidb.tsubakuro.kvs.basic;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.tsurugidb.tsubakuro.kvs.CommitType;
@@ -11,22 +12,23 @@ import com.tsurugidb.tsubakuro.kvs.KvsServiceCode;
 import com.tsurugidb.tsubakuro.kvs.KvsServiceException;
 import com.tsurugidb.tsubakuro.kvs.PutType;
 import com.tsurugidb.tsubakuro.kvs.RecordBuffer;
-import com.tsurugidb.tsubakuro.kvs.util.TestBase;
+import com.tsurugidb.tsubakuro.kvs.util.Utils;
 
-class CommitTest extends TestBase {
+class CommitTest {
 
     private static final String TABLE_NAME = "table" + CommitTest.class.getSimpleName();
     private static final String KEY_NAME = "k1";
     private static final String VALUE_NAME = "v1";
 
-    CommitTest() throws Exception {
+    @BeforeAll
+    static void setup() throws Exception {
         String schema = String.format("%s BIGINT PRIMARY KEY, %s BIGINT", KEY_NAME, VALUE_NAME);
-        createTable(TABLE_NAME, schema);
+        Utils.createTable(TABLE_NAME, schema);
     }
 
     @Test
     public void unspecified() throws Exception {
-        try (var session = getNewSession(); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var kvs = KvsClient.attach(session)) {
             try (var tx = kvs.beginTransaction().await()) {
                 RecordBuffer buffer = new RecordBuffer();
                 buffer.add(KEY_NAME, 1L);
@@ -39,7 +41,7 @@ class CommitTest extends TestBase {
 
     @Test
     public void multiCommit() throws Exception {
-        try (var session = getNewSession(); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var kvs = KvsClient.attach(session)) {
             try (var tx = kvs.beginTransaction().await()) {
                 RecordBuffer buffer = new RecordBuffer();
                 buffer.add(KEY_NAME, 1L);
@@ -57,7 +59,7 @@ class CommitTest extends TestBase {
 
     @Test
     public void opsAfterCommit() throws Exception {
-        try (var session = getNewSession(); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var kvs = KvsClient.attach(session)) {
             try (var tx = kvs.beginTransaction().await()) {
                 RecordBuffer buffer = new RecordBuffer();
                 buffer.add(KEY_NAME, 1L);
@@ -93,7 +95,7 @@ class CommitTest extends TestBase {
 
     @Test
     public void commitTypes() throws Exception {
-        try (var session = getNewSession(); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var kvs = KvsClient.attach(session)) {
             for (var cmtType : CommitType.values()) {
                 if (cmtType == CommitType.UNSPECIFIED) {
                     continue;
@@ -107,7 +109,7 @@ class CommitTest extends TestBase {
                         kvs.commit(tx, cmtType).await();
                     });
                     assertEquals(KvsServiceCode.NOT_IMPLEMENTED, ex.getDiagnosticCode());
-                    System.err.println(getLineNumber() + "\t" + ex.getMessage());
+                    System.err.println(Utils.getLineNumber() + "\t" + ex.getMessage());
                     // rollback and dispose will be called at tx.close()
                 }
             }

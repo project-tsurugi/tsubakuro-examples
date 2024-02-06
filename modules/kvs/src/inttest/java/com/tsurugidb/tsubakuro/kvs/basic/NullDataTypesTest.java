@@ -17,9 +17,9 @@ import com.tsurugidb.tsubakuro.kvs.KvsServiceException;
 import com.tsurugidb.tsubakuro.kvs.Record;
 import com.tsurugidb.tsubakuro.kvs.RecordBuffer;
 import com.tsurugidb.tsubakuro.kvs.Values;
-import com.tsurugidb.tsubakuro.kvs.util.TestBase;
+import com.tsurugidb.tsubakuro.kvs.util.Utils;
 
-class NullDataTypesTest extends TestBase {
+class NullDataTypesTest {
 
     private static final String TABLE_NAME = "table" + NullDataTypesTest.class.getSimpleName();
     private static final String KEY_NAME = "k1";
@@ -36,7 +36,7 @@ class NullDataTypesTest extends TestBase {
 
     private static void checkPutGet(KvsData.Value key1, KvsData.Value value1) throws Exception {
         RecordBuffer buffer = new RecordBuffer();
-        try (var session = getNewSession(); var kvs = KvsClient.attach(session)) {
+        try (var session = Utils.getNewSession(); var kvs = KvsClient.attach(session)) {
             // key: null, value: non-null
             try (var tx = kvs.beginTransaction().await()) {
                 buffer.addNull(KEY_NAME);
@@ -84,9 +84,9 @@ class NullDataTypesTest extends TestBase {
         return String.format("%s %s PRIMARY KEY, %s %s", KEY_NAME, typeName, VALUE_NAME, typeName);
     }
 
-    private void checkDataType(String typeName, KvsData.Value key1, KvsData.Value value1) throws Exception {
+    private static void checkDataType(String typeName, KvsData.Value key1, KvsData.Value value1) throws Exception {
         // see jogasaki/docs/value_limit.md
-        createTable(TABLE_NAME, schema(typeName));
+        Utils.createTable(TABLE_NAME, schema(typeName));
         checkPutGet(key1, value1);
     }
 
@@ -143,7 +143,7 @@ class NullDataTypesTest extends TestBase {
     public void decimalScaleTest() throws Exception {
         final BigDecimal key1 = new BigDecimal("12.34");
         final BigDecimal value1 = new BigDecimal("56.78");
-        createTable(TABLE_NAME, schema("decimal(4,2)"));
+        Utils.createTable(TABLE_NAME, schema("decimal(4,2)"));
         checkPutGet(Values.of(key1), Values.of(value1));
     }
 
