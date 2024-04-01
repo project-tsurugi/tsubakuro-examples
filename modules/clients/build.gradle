@@ -20,6 +20,7 @@ tasks.register('runExample', JavaExec) {
     systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
     systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
 
+    jvmArgs '-Dtsubakuro.diagnostic'
     jvmArgs '-Dcom.sun.management.jmxremote.port=9999'
     jvmArgs '-Dcom.sun.management.jmxremote.authenticate=false'
     jvmArgs '-Dcom.sun.management.jmxremote.ssl=false'
