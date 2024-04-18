@@ -67,8 +67,8 @@ public final class Main {
             if (fixThreadMapping) {
             if (threads != warehouses) {
                 if (threads > warehouses) {
-                System.out.printf("threads (%d) is greater than warehouses (%d)%n", threads, warehouses);
-                return;
+                    System.out.printf("threads (%d) is greater than warehouses (%d)%n", threads, warehouses);
+                    System.exit(1);
                 }
                 warehouses = (warehouses / threads) * threads;
                 System.out.printf("changed warehouses to %d%n", warehouses);
@@ -107,7 +107,7 @@ public final class Main {
             total.print(threads);
         } catch (IOException | ServerException | InterruptedException | BrokenBarrierException | TimeoutException e) {
             System.out.println(e);
-
+            System.exit(1);
         }
     }
 }
