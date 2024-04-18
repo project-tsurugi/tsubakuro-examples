@@ -149,6 +149,7 @@ public final class Main {
 
         if (!success) {
             System.err.println("something wrong in loading TPC-C initial data");
+            System.exit(1);
         }
     }
 }
