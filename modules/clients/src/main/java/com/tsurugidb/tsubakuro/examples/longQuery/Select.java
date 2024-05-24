@@ -19,7 +19,6 @@ public class Select {
         } catch (ServerException | InterruptedException | IOException | TimeoutException e) {
             // Intentionally grasps exceptions to allow the caller to continue processing
             System.err.println(e);
-            e.printStackTrace();
         }
     }
     static void query(Transaction transaction, String query) {

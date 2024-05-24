@@ -53,7 +53,7 @@ public final class Main {
              SqlClient sqlClient = SqlClient.attach(session);
              var transaction = sqlClient.createTransaction().get(timeout, TimeUnit.MILLISECONDS)) {
 
-            System.out.println("---- use " + url + " to connect tsurugidb ----");
+            System.out.println("---- program begin with using " + url + " to connect tsurugidb ----");
             try {
                 System.out.println("---- ( start query 1 ) ----");
                 long start = System.currentTimeMillis();
@@ -65,10 +65,12 @@ public final class Main {
                 Select.query(transaction, "SELECT * FROM TBL02,TBL02,TBL02,TBL02,TBL01 WHERE TBL01.pk=-1");
                 System.out.println("---- ( end query 2 in " + (System.currentTimeMillis() - start) + " milli sec. ) ----");
             }
+            System.out.println("---- ( commit ) ----");
             transaction.commit().await();
         } catch (IOException | ServerException | InterruptedException | TimeoutException e) {
-            System.out.println("---- ( catch exception )----");
-            System.out.println(e);
+            System.err.println(e);
+        } finally {
+            System.out.println("---- program end ----");
         }
     }
 }
