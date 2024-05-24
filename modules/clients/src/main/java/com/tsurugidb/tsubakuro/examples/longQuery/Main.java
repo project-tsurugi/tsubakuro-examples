@@ -53,7 +53,7 @@ public final class Main {
              SqlClient sqlClient = SqlClient.attach(session);
              var transaction = sqlClient.createTransaction().get(timeout, TimeUnit.MILLISECONDS)) {
 
-            System.out.println("---- use " + url + " to connect tsurugidb----");
+            System.out.println("---- use " + url + " to connect tsurugidb ----");
             try {
                 System.out.println("---- ( start query 1 ) ----");
                 long start = System.currentTimeMillis();

@@ -29,11 +29,13 @@ public final class Main {
     private static String url = System.getProperty("tsurugi.dbname");
 
     private static boolean forceful = false;
+    private static boolean requestShutdown = true;
 
     public static void main(String[] args) {
         // コマンドラインオプションの設定
         Options options = new Options();
         options.addOption(Option.builder("f").argName("forceful").desc("forceful shutdown").build());
+        options.addOption(Option.builder("n").argName("noShutdown").desc("do not request shutdown").build());
         CommandLineParser parser = new DefaultParser();
 
         try {
@@ -42,6 +44,10 @@ public final class Main {
             if (cmd.hasOption("f")) {
                 forceful = true;
                 System.err.println("forceful shutdown");
+            }
+            if (cmd.hasOption("n")) {
+                requestShutdown = false;
+                System.err.println("no shutdown request");
             }
         } catch (ParseException e) {
             System.err.println("cmd parser failed." + e);
@@ -53,10 +59,19 @@ public final class Main {
              .create(10, TimeUnit.SECONDS);
              ) {
 
-            session.shutdown(forceful ? ShutdownType.FORCEFUL : ShutdownType.GRACEFUL).get();
-            
+            if (requestShutdown) {
+                Thread.sleep(2000);
+                session.shutdown(forceful ? ShutdownType.FORCEFUL : ShutdownType.GRACEFUL).get();
+            }
+
+            while (session.isAlive()) {
+                Thread.sleep(2000);
+                System.out.println("session is still alive");
+            }
+
         } catch (IOException | ServerException | InterruptedException | TimeoutException e) {
             System.out.println(e);
         }
+        System.out.println("session shutdown has been completed");
     }
 }
