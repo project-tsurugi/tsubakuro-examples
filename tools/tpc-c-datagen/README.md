@@ -20,6 +20,7 @@ cmake --build .
 ```sh
 cmake --build . --target install
 ```
+The default setting of cmake is to install to /usr/local/bin, so super user privileges are required for installation. If you change the installation directory to a directory with user write permission by cmake options, installation with user privileges is possible.
 
 ## run
 ```sh
