@@ -23,7 +23,7 @@ popd
 ```
 
 ### table初期データ作成
-https://github.com/project-tsurugi/jogasaki-benchmarks/tree/master/tpc-c-datagen/README.md 参照
+https://github.com/project-tsurugi/tsubakuro-examples/tree/master/tools/tpc-c-datagen/README.md 参照
 
 ### ベンチマーク実行
 ベンチマーク実行は、tsurugidbを起動し、table初期データをloadした後にクライアントプログラムを実行する。
