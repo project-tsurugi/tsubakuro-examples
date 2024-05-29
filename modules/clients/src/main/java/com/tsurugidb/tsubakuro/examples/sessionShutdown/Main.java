@@ -16,6 +16,7 @@ import com.tsurugidb.tsubakuro.common.Session;
 import com.tsurugidb.tsubakuro.common.SessionBuilder;
 import com.tsurugidb.tsubakuro.common.ShutdownType;
 import com.tsurugidb.tsubakuro.exception.ServerException;
+import com.tsurugidb.tsubakuro.sql.SqlClient;
 import com.tsurugidb.tsubakuro.channel.common.connection.UsernamePasswordCredential;
 
 public final class Main {
@@ -30,12 +31,14 @@ public final class Main {
 
     private static boolean forceful = false;
     private static boolean requestShutdown = true;
+    private static boolean execSql = false;
 
     public static void main(String[] args) {
         // コマンドラインオプションの設定
         Options options = new Options();
         options.addOption(Option.builder("f").argName("forceful").desc("forceful shutdown").build());
         options.addOption(Option.builder("n").argName("noShutdown").desc("do not request shutdown").build());
+        options.addOption(Option.builder("s").argName("execSQL").desc("execute sql").build());
         CommandLineParser parser = new DefaultParser();
 
         try {
@@ -49,6 +52,10 @@ public final class Main {
                 requestShutdown = false;
                 System.err.println("no shutdown request");
             }
+            if (cmd.hasOption("s")) {
+                execSql = true;
+                System.err.println("execute sql");
+            }
         } catch (ParseException e) {
             System.err.println("cmd parser failed." + e);
             System.exit(0);
@@ -57,21 +64,38 @@ public final class Main {
         try (var session = SessionBuilder.connect(url)
              .withCredential(new UsernamePasswordCredential("user", "pass"))
              .create(10, TimeUnit.SECONDS);
+             SqlClient sqlClient = SqlClient.attach(session);
              ) {
 
-            if (requestShutdown) {
+            if (execSql) {
+                var transaction = sqlClient.createTransaction().get();
+                var future = transaction.executeQuery("SELECT * FROM TBL02,TBL02,TBL02,TBL02,TBL02,TBL01 WHERE TBL01.pk=-1");
+                shutdown(session);
+                try {
+                    transaction.commit().get();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } 
+            } else {
                 Thread.sleep(2000);
-                session.shutdown(forceful ? ShutdownType.FORCEFUL : ShutdownType.GRACEFUL).get();
-            }
-
-            while (session.isAlive()) {
-                Thread.sleep(2000);
-                System.out.println("session is still alive");
+                shutdown(session);
             }
 
         } catch (IOException | ServerException | InterruptedException | TimeoutException e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
         System.out.println("session shutdown has been completed");
+    }
+
+    public static void shutdown(Session session) throws IOException, ServerException, InterruptedException, TimeoutException {
+        if (requestShutdown) {
+            long start = System.currentTimeMillis();
+            try {
+                System.out.println("---- request shutdown ----");
+                session.shutdown(forceful ? ShutdownType.FORCEFUL : ShutdownType.GRACEFUL).get();
+            } finally {
+                System.out.println("---- finish shutdown, which takes " + (System.currentTimeMillis() - start) + " milli sec ----");
+            }
+        }
     }
 }
