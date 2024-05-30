@@ -70,6 +70,7 @@ public final class Main {
             if (execSql) {
                 var transaction = sqlClient.createTransaction().get();
                 var future = transaction.executeQuery("SELECT * FROM TBL02,TBL02,TBL02,TBL02,TBL02,TBL01 WHERE TBL01.pk=-1");
+                Thread.sleep(2000);
                 shutdown(session);
                 try {
                     transaction.commit().get();
