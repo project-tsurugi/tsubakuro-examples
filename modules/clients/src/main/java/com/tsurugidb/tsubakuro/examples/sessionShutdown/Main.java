@@ -76,7 +76,7 @@ public final class Main {
                     transaction.commit().get();
                 } catch (Exception e) {
                     e.printStackTrace();
-                } 
+                }
             } else {
                 Thread.sleep(2000);
                 shutdown(session);
@@ -96,6 +96,10 @@ public final class Main {
                 session.shutdown(forceful ? ShutdownType.FORCEFUL : ShutdownType.GRACEFUL).get();
             } finally {
                 System.out.println("---- finish shutdown, which takes " + (System.currentTimeMillis() - start) + " milli sec ----");
+            }
+        } else {
+            while (session.isAlive()) {
+                System.out.println("session is still alive");
             }
         }
     }
