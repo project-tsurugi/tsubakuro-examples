@@ -12,12 +12,14 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import com.tsurugidb.tsubakuro.util.FutureResponse;
 import com.tsurugidb.tsubakuro.common.Session;
 import com.tsurugidb.tsubakuro.common.SessionBuilder;
 import com.tsurugidb.tsubakuro.common.ShutdownType;
 import com.tsurugidb.tsubakuro.channel.common.connection.UsernamePasswordCredential;
 import com.tsurugidb.tsubakuro.exception.ServerException;
 import com.tsurugidb.tsubakuro.sql.SqlClient;
+import com.tsurugidb.tsubakuro.sql.ResultSet;
 
 // Prior to executing this program, the following create table and insert to table must be executed.
 //    DROP TABLE IF EXISTS TBL01;
@@ -44,13 +46,14 @@ public final class Main {
     private static String url = System.getProperty("tsurugi.dbname");
 
     private static boolean doGet = false;
-    private static boolean threadSleep = false;
+    private static boolean execSql = false;
+    private static int sleepTime = 2000;
 
     public static void main(String[] args) {
         // コマンドラインオプションの設定
         Options options = new Options();
         options.addOption(Option.builder("g").argName("doGet").desc("do get() operation").build());
-        options.addOption(Option.builder("s").argName("sleep").desc("sleep for a while").build());
+        options.addOption(Option.builder("s").argName("execSql").desc("execute SQL").build());
         options.addOption(Option.builder("h").argName("huge").desc("huge result set").build());
         CommandLineParser parser = new DefaultParser();
 
@@ -63,8 +66,8 @@ public final class Main {
                 System.err.println("do get() operation");
             }
             if (cmd.hasOption("s")) {
-                threadSleep = true;
-                System.err.println("sleep for a while");
+                execSql = true;
+                System.err.println("execute SQL");
             }
             if (cmd.hasOption("h")) {
                 sql = "SELECT * FROM TBL02,TBL02,TBL01";
@@ -82,24 +85,25 @@ public final class Main {
                 .create(10, TimeUnit.SECONDS);
             SqlClient sqlClient = SqlClient.attach(session);
             var transaction = sqlClient.createTransaction().get(timeout, TimeUnit.MILLISECONDS);
-            var futureResultSet = transaction.executeQuery(sql);
-            if (doGet) {
-                futureResultSet.get();
+            FutureResponse<ResultSet> futureResultSet = null;
+            if (execSql) {
+                futureResultSet = transaction.executeQuery(sql);
+                if (doGet) {
+                    futureResultSet.get();
+                }
             }
-            if (threadSleep) {
-                Thread.sleep(10000);
-            }
+            Thread.sleep(sleepTime);
 
             System.out.println("going to do session.close");
             session.close();
 
-            if (!doGet) {
+            if (!doGet && futureResultSet != null) {
                 futureResultSet.get();
             }
         } catch (IOException | ServerException | InterruptedException | TimeoutException e) {
             System.err.println(e);
         } finally {
-            System.out.println("---- program execution finished in " + (System.currentTimeMillis() - start) + " milli seconds ----");
+            System.out.println("---- program execution finished in " + (System.currentTimeMillis() - start - sleepTime) + " milli seconds ----");
         }
     }
 }

@@ -100,6 +100,7 @@ public final class Main {
         } else {
             while (session.isAlive()) {
                 System.out.println("session is still alive");
+                Thread.sleep(2000);
             }
         }
     }
