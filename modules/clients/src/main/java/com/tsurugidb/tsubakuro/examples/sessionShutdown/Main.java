@@ -97,12 +97,16 @@ public final class Main {
             } finally {
                 System.out.println("---- finish shutdown, which takes " + (System.currentTimeMillis() - start) + " milli sec ----");
             }
-            System.out.println("session.isAlive() = " + session.isAlive());
-        } else {
-            while (session.isAlive()) {
-                System.out.println("session is still alive");
-                Thread.sleep(2000);
-            }
+            Thread.sleep(100);
+        }
+        boolean detectAlive = false;
+        while (session.isAlive()) {
+            System.out.println("session is still alive");
+            Thread.sleep(100);
+            detectAlive = true;
+        }
+        if (detectAlive) {
+            System.out.println("session status has changed from alive to shutdown");
         }
     }
 }
