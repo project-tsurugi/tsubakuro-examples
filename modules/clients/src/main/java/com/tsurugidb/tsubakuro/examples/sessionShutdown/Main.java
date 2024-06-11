@@ -97,6 +97,7 @@ public final class Main {
             } finally {
                 System.out.println("---- finish shutdown, which takes " + (System.currentTimeMillis() - start) + " milli sec ----");
             }
+            System.out.println("session.isAlive() = " + session.isAlive());
         } else {
             while (session.isAlive()) {
                 System.out.println("session is still alive");
