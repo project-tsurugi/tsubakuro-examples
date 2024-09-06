@@ -26,8 +26,15 @@ public final class Main {
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = null;
 
-        if (cmd.hasOption("i")) {
-            testResponse = true;
+        try {
+            cmd = parser.parse(options, args);
+            if (cmd.hasOption("i")) {
+                testResponse = true;
+            }
+        } catch (ParseException e) {
+            System.out.println(e);
+            e.printStackTrace();
+            return;
         }
 
         try {
