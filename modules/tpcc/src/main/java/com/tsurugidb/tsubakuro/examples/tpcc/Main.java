@@ -16,6 +16,7 @@ import com.tsurugidb.tsubakuro.sql.SqlClient;
 
 public final class Main {
     private static String url = System.getProperty("tsurugi.dbname");
+    private static String printDistribution = System.getProperty("printResponseTimeDistribution");
 
     static long warehouses()  throws IOException, ServerException, InterruptedException, TimeoutException {
         try (
@@ -82,7 +83,7 @@ public final class Main {
             AtomicBoolean stop = new AtomicBoolean();
 
             for (int i = 0; i < threads; i++) {
-                var profile = new Profile();
+                var profile = new Profile(printDistribution != null ? (printDistribution == "true") : true);  // default true (temporary)
                 profile.warehouses = warehouses;
                 profile.threads = threads;
                 profile.index = i;

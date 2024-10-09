@@ -107,7 +107,7 @@ public class Delivery {
 
     @SuppressWarnings("checkstyle:methodlength")
     public void transaction(AtomicBoolean stop) throws IOException, ServerException, InterruptedException {
-        while (!stop.get()) {
+        while (!stop.get()) {  // placed for transaction reexecution due to failure. If the transaction ends normally, it returns.
             try (var transaction = sqlClient.createTransaction().get();) {
                 profile.invocation.delivery++;
                 long dId;
