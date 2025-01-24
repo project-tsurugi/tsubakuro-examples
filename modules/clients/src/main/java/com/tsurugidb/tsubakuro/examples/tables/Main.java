@@ -27,10 +27,21 @@ public final class Main {
              .create(10, TimeUnit.SECONDS);
              SqlClient sqlClient = SqlClient.attach(session)) {
 
+            var searchPath = sqlClient.getSearchPath().get();
+            System.out.println("---- schema names ----");
+            for (var s : searchPath.getSchemaNames()) {
+                System.out.println("  " + s);
+            }
             var tableList = sqlClient.listTables().get();
             for (var t : tableList.getTableNames()) {
                 var metadata = sqlClient.getTableMetadata(t).get();
                 System.out.println("---- table name = " + t + " ----");
+                var dn = metadata.getDatabaseName();
+                var sn = metadata.getSchemaName();
+                var tn = metadata.getTableName();
+                System.out.println("DatabaseName = " + (dn.isPresent() ? dn.get() : "DatabaseName not exist"));
+                System.out.println("SchemaName = " + (sn.isPresent() ? sn.get() : "SchemaName not exist"));
+                System.out.println("TableName = " + tn);
                 for (var c : metadata.getColumns()) {
                     System.out.println("column = " + c);
                     System.out.println();
