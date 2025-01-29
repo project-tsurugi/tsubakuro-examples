@@ -54,12 +54,12 @@ public final class Main {
 
             if (cmd.hasOption("q")) {
                 query = true;
-                System.err.println("query mode");
             }
         } catch (ParseException e) {
             System.err.println("cmd parser failed." + e);
         }
 
+        System.err.println(query ? "query mode" : "statement mode");
         try (
              Session session = SessionBuilder.connect(url)
              .withCredential(new UsernamePasswordCredential("user", "pass"))
