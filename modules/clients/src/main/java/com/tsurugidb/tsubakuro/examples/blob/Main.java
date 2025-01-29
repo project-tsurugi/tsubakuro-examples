@@ -1,6 +1,7 @@
 package com.tsurugidb.tsubakuro.examples.blob;
 
 import java.io.IOException;
+import java.io.LineNumberReader;
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -71,9 +72,9 @@ public final class Main {
                 preparedStatement = sqlClient.prepare("SELECT FROM testtable WHERE key = 1").await();
 
                 var resultSet = transaction.executeQuery(preparedStatement).await();
+                var metadata = resultSet.getMetadata().getColumns();
                 while (resultSet.nextRow()) {
                     int columnIndex = 0;
-                    var metadata = resultSet.getMetadata().getColumns();
                     while (resultSet.nextColumn()) {
                         if (!resultSet.isNull()) {
                             switch (metadata.get(columnIndex).getAtomType()) {
@@ -94,13 +95,27 @@ public final class Main {
                                 break;
                             case BLOB:
                                 var is = sqlClient.openInputStream(resultSet.fetchBlob()).await();
+                                System.out.print("column name = " + metadata.get(columnIndex).getName() + ": content = '");
                                 while (true) {
-                                    var c = is.read();
-                                    if (c < 0) {
+                                    var i = is.read();
+                                    if (i < 0) {
                                         break;
                                     }
-                                    System.out.print(is.read() + " ");
+                                    char c = (char) i;
+                                    if (c != '\n') {
+                                        System.out.print(c);
+                                    }
                                 }
+                                System.out.println("'");
+                                break;
+                            case CLOB:
+                                var lr = new LineNumberReader(sqlClient.openReader(resultSet.fetchClob()).await());
+                                System.out.print("column name = " + metadata.get(columnIndex).getName() + ": content = '");
+                                String s;
+                                while ((s = lr.readLine()) != null) {
+                                    System.out.print(s);
+                                }
+                                System.out.println("'");
                                 break;
                             default:
                                 throw new IOException("the column type is invalid");
@@ -113,17 +128,18 @@ public final class Main {
                 }
                 resultSet.close();
             } else {
-                //                var placeholder = SqlRequest.Placeholder.newBuilder()
-                //                    .setName("blob")
-                //                    .setAtomType(SqlCommon.AtomType.BLOB)
-                //                    .build();
                 preparedStatement = sqlClient.prepare("INSERT INTO testTable (key, blob) VALUES (1, :blob)",
-                                                      Placeholders.of("blob", SqlCommon.Blob.class)).await();
+                                                      Placeholders.of("blob1", SqlCommon.Blob.class),
+                                                      Placeholders.of("blob2", SqlCommon.Blob.class),
+                                                      Placeholders.of("clob", SqlCommon.Clob.class)).await();
 
                 transaction.executeStatement(preparedStatement,
-                                             Parameters.blobOf("blob", Paths.get("/tmp/testChannelUp.data"))).await();
+                                             Parameters.blobOf("blob1", Paths.get("/tmp/testChannelBlob1Up.data")),
+                                             Parameters.blobOf("blob2", Paths.get("/tmp/testChannelBlob2Up.data")),
+                                             Parameters.clobOf("clob", Paths.get("/tmp/testChannelClobUp.data"))).await();
             }
         } catch (Exception e) {
+            e.printStackTrace();
             System.err.println(e);
         }
     }
