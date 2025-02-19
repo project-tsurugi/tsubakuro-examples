@@ -128,7 +128,7 @@ public final class Main {
                 }
                 resultSet.close();
             } else {
-                preparedStatement = sqlClient.prepare("INSERT INTO testTable (key, blob) VALUES (1, :blob)",
+                preparedStatement = sqlClient.prepare("INSERT INTO testTable (key, blob_column_1, blob_column_2, clob_column) VALUES (1, :blob1, :blob2, :clob)",
                                                       Placeholders.of("blob1", SqlCommon.Blob.class),
                                                       Placeholders.of("blob2", SqlCommon.Blob.class),
                                                       Placeholders.of("clob", SqlCommon.Clob.class)).await();
