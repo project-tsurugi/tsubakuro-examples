@@ -186,11 +186,22 @@ tasks.register('runLob', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'com.tsurugidb.tsubakuro.examples.blob.Main'
 
-    systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'ipc:tsurugi'
+    systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'ipc:mock'
 
     systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
     systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'
     systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
     systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
-    systemProperty 'tsurugi.dbname', 'ipc:mock'
+}
+
+tasks.register('runFault', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tsurugidb.tsubakuro.examples.fault.Main'
+
+    systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'ipc:mock'
+
+    systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
+    systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'
+    systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
+    systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
 }

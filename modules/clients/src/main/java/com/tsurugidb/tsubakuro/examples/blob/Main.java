@@ -94,7 +94,7 @@ public final class Main {
                                 System.out.println(resultSet.fetchCharacterValue());
                                 break;
                             case BLOB:
-                                var is = sqlClient.openInputStream(resultSet.fetchBlob()).await();
+                                var is = transaction.openInputStream(resultSet.fetchBlob()).await();
                                 System.out.print("column name = " + metadata.get(columnIndex).getName() + ": content = '");
                                 while (true) {
                                     var i = is.read();
@@ -109,7 +109,7 @@ public final class Main {
                                 System.out.println("'");
                                 break;
                             case CLOB:
-                                var lr = new LineNumberReader(sqlClient.openReader(resultSet.fetchClob()).await());
+                                var lr = new LineNumberReader(transaction.openReader(resultSet.fetchClob()).await());
                                 System.out.print("column name = " + metadata.get(columnIndex).getName() + ": content = '");
                                 String s;
                                 while ((s = lr.readLine()) != null) {
