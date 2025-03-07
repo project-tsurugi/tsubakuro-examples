@@ -2,6 +2,7 @@ package com.tsurugidb.tsubakuro.examples.blob;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -39,12 +40,14 @@ public final class Main {
     private static long timeout = 500;  // milliseconds
 
     private static boolean query = false;
+    private static boolean createFile = true;
 
     public static void main(String[] args) {
         // コマンドラインオプションの設定
         Options options = new Options();
 
         options.addOption(Option.builder("q").argName("query").desc("Query mode.").build());
+        options.addOption(Option.builder("n").argName("noCreateFile").desc("Does not create file.").build());
 
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = null;
@@ -54,6 +57,9 @@ public final class Main {
 
             if (cmd.hasOption("q")) {
                 query = true;
+            }
+            if (cmd.hasOption("n")) {
+                createFile = false;
             }
         } catch (ParseException e) {
             System.err.println("cmd parser failed." + e);
@@ -128,15 +134,23 @@ public final class Main {
                 }
                 resultSet.close();
             } else {
+                String[] fileNameArray = {"/tmp/testChannelBlob1Up.data", "/tmp/testChannelBlob2Up.data", "/tmp/testChannelClobUp.data"};
+                byte[] data = new byte[] { 0x01, 0x02, 0x03 };
+                for (var n: fileNameArray) {
+                    var path = Paths.get(n);
+                    if (Files.notExists(path) && createFile) {
+                        Files.write(Paths.get(n), data);
+                    }
+                }
                 preparedStatement = sqlClient.prepare("INSERT INTO testTable (key, blob_column_1, blob_column_2, clob_column) VALUES (1, :blob1, :blob2, :clob)",
                                                       Placeholders.of("blob1", SqlCommon.Blob.class),
                                                       Placeholders.of("blob2", SqlCommon.Blob.class),
                                                       Placeholders.of("clob", SqlCommon.Clob.class)).await();
 
                 transaction.executeStatement(preparedStatement,
-                                             Parameters.blobOf("blob1", Paths.get("/tmp/testChannelBlob1Up.data")),
-                                             Parameters.blobOf("blob2", Paths.get("/tmp/testChannelBlob2Up.data")),
-                                             Parameters.clobOf("clob", Paths.get("/tmp/testChannelClobUp.data"))).await();
+                                             Parameters.blobOf("blob1", Paths.get(fileNameArray[0])),
+                                             Parameters.blobOf("blob2", Paths.get(fileNameArray[1])),
+                                             Parameters.clobOf("clob", Paths.get(fileNameArray[2]))).await();
             }
         } catch (Exception e) {
             e.printStackTrace();
