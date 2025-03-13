@@ -377,7 +377,7 @@ public class NewOrder {
                                                                    Parameters.of("ol_i_id", (long) olIid),
                                                                    Parameters.of("ol_supply_w_id", (long) olSupplyWid),
                                                                    Parameters.of("ol_quantity", (long) olQuantity),
-                                                                   Parameters.of("ol_amount", (long) olAmount),
+                                                                   Parameters.of("ol_amount", (double) olAmount),
                                                                    Parameters.of("ol_dist_info", olDistInfo));
                         var result9 = future9.get();
                     } catch (ServerException e) {
