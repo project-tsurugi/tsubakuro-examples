@@ -53,7 +53,6 @@ find_package(Boost
         COMPONENTS filesystem thread system container stacktrace_backtrace
         REQUIRED
         )
-find_package(mpdecpp REQUIRED)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 include(CompileOptions)
