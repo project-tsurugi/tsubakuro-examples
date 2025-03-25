@@ -111,10 +111,12 @@ public final class Main {
 
         if (maxParallelism <= 0) {
             boolean exhausted = false;
-            while (!exhausted) {
+            int i = 0;
+            while (!exhausted && (i < warehouses)) {
                 try {
                     Worker w = new Worker(url, tasks);
                     workers.add(w);
+                    i++;
                 } catch (IOException e) {
                     exhausted = true;
                 }
