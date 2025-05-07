@@ -205,3 +205,15 @@ tasks.register('runFault', JavaExec) {
     systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
     systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
 }
+
+tasks.register('runSessionCloseWithoutRSClose', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tsurugidb.tsubakuro.examples.sessionCloseWithoutRSClose.Main'
+
+    systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'tcp://localhost:12345'
+
+    systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
+    systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'
+    systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
+    systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
+}
