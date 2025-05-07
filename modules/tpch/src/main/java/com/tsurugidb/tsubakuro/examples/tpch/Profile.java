@@ -13,7 +13,8 @@ public class Profile {
     public long q19;
 
     public Profile() {
-    this.transactionOption = SqlRequest.TransactionOption.newBuilder();
+    this.transactionOption = SqlRequest.TransactionOption.newBuilder().setType(SqlRequest.TransactionType.READ_ONLY).setScanParallel(4);
+
     this.queryValidation = false;
     this.q21 = 0;
     this.q22 = 0;
