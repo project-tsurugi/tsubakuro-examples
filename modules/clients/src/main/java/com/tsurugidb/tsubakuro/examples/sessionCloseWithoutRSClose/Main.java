@@ -29,6 +29,8 @@ import com.tsurugidb.tsubakuro.sql.SqlClient;
 // where n is a value of about 20 to 25
 public final class Main {
     private static long timeout = 5000;
+    private static boolean withoutFutureResponseGet = false;
+
     private Main(String[] args) {
     }
     // set dbname as follows
@@ -38,9 +40,31 @@ public final class Main {
     private static String url = System.getProperty("tsurugi.dbname");
 
     private static boolean forceful = false;
-    private static boolean requestShutdown = true;
+    private static boolean requestShutdown = false;
 
     public static void main(String[] args) {
+        // コマンドラインオプションの設定
+        Options options = new Options();
+        options.addOption(Option.builder("f").argName("future").desc("without FutureResponse.get()").build());
+        options.addOption(Option.builder("s").argName("shutdown").desc("do shutdown before Session close").build());
+        CommandLineParser parser = new DefaultParser();
+
+        try {
+            CommandLine cmd = parser.parse(options, args);
+
+            if (cmd.hasOption("f")) {
+                withoutFutureResponseGet = true;
+                System.out.println("==== withoutFutureResponseGet mode ====");
+            }
+            if (cmd.hasOption("s")) {
+                requestShutdown = true;
+                System.out.println("==== do shutdown before Session close ====");
+            }
+        } catch (ParseException e) {
+            System.err.println("cmd parser failed." + e);
+            System.exit(0);
+        }
+
         try (var session = SessionBuilder.connect(url)
              .withCredential(new UsernamePasswordCredential("user", "pass"))
              .create(10, TimeUnit.SECONDS);
@@ -49,7 +73,15 @@ public final class Main {
             System.out.println("---- program begin with using " + url + " to connect tsurugidb ----");
             var transaction = sqlClient.createTransaction().get(timeout, TimeUnit.MILLISECONDS);
             System.out.println("---- ( start query ) ----");
-            var resultSet = transaction.executeQuery("SELECT * FROM TBL01").get(timeout, TimeUnit.MILLISECONDS);
+            if (!withoutFutureResponseGet) {
+                var resultSet = transaction.executeQuery("SELECT * FROM TBL01").get(timeout, TimeUnit.MILLISECONDS);
+            } else {
+                var future = transaction.executeQuery("SELECT * FROM TBL01");
+            }
+            if (requestShutdown) {
+                System.out.println("---- ( request shutdown ) ----");
+                session.shutdown(ShutdownType.FORCEFUL).get();
+            }
             System.out.println("---- ( going to close Sessoin without ResultSet close ) ----");
         } catch (IOException | ServerException | InterruptedException | TimeoutException e) {
             System.err.println(e);
