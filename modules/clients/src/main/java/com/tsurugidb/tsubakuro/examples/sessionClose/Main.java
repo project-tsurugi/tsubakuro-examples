@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.text.MessageFormat;
+import java.time.LocalDateTime;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -47,6 +48,7 @@ public final class Main {
 
     private static boolean doGet = false;
     private static boolean execSql = false;
+    private static boolean transactionClose = false;
     private static int sleepTime = 2000;
 
     public static void main(String[] args) {
@@ -55,6 +57,7 @@ public final class Main {
         options.addOption(Option.builder("g").argName("doGet").desc("do get() operation").build());
         options.addOption(Option.builder("s").argName("execSql").desc("execute SQL").build());
         options.addOption(Option.builder("h").argName("huge").desc("huge result set").build());
+        options.addOption(Option.builder("t").argName("transactionClose").desc("clost transaction").build());
         CommandLineParser parser = new DefaultParser();
 
         String sql = "SELECT * FROM TBL02,TBL02,TBL02,TBL02,TBL02,TBL01 WHERE TBL01.pk=-1";
@@ -72,6 +75,10 @@ public final class Main {
             if (cmd.hasOption("h")) {
                 sql = "SELECT * FROM TBL02,TBL02,TBL01";
                 System.err.println("sql = " + sql);
+            }
+            if (cmd.hasOption("t")) {
+                transactionClose = true;
+                System.err.println("do transaction.close() before session.close()");
             }
         } catch (ParseException e) {
             System.err.println("cmd parser failed." + e);
@@ -94,8 +101,16 @@ public final class Main {
             }
             Thread.sleep(sleepTime);
 
-            System.out.println("going to do session.close");
+            if (transactionClose) {
+                System.out.println(LocalDateTime.now() + " going to transaction.close()");
+                transaction.close();
+                System.out.println(LocalDateTime.now() + " return from transaction.close()");
+                Thread.sleep(sleepTime);
+            }
+
+            System.out.println(LocalDateTime.now() + " going to session.close()");
             session.close();
+            System.out.println(LocalDateTime.now() + " return from session.close()");
 
             if (!doGet && futureResultSet != null) {
                 futureResultSet.get();
