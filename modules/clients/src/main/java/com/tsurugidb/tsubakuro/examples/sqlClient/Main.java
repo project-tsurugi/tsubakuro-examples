@@ -36,6 +36,7 @@ public final class Main {
     private static boolean usePreparedStatement = false;
     private static boolean query = true;
     private static boolean display = false;
+    private static boolean interrupting = false;
 
     public static void main(String[] args) {
         // コマンドラインオプションの設定
@@ -45,6 +46,7 @@ public final class Main {
         options.addOption(Option.builder("q").argName("query").desc("Query mode.").build());
         options.addOption(Option.builder("p").argName("prepared statement").desc("Use prepared statement.").build());
         options.addOption(Option.builder("d").argName("display result").desc("Display query result.").build());
+        options.addOption(Option.builder("i").argName("interrupting the reading").desc("interrupting the reading.").build());
 
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = null;
@@ -65,6 +67,10 @@ public final class Main {
                 if (cmd.hasOption("d")) {
                     display = true;
                     System.err.println("display query result");
+                }
+                if (cmd.hasOption("i")) {
+                    interrupting = true;
+                    System.err.println("interrupt the ResultSet reading");
                 }
             }
         } catch (ParseException e) {
@@ -95,7 +101,9 @@ public final class Main {
                 if (display) {
                     printResultset(rs);
                 }
+                System.out.println("close the ResultSet begin");
                 rs.close();
+                System.out.println("close the ResultSet end");
             } else {
                 if (usePreparedStatement) {
                     transaction.executeStatement(preparedStatement).await();
@@ -104,6 +112,7 @@ public final class Main {
                 }
             }
         } catch (Exception e) {
+            System.err.println("catch exception at 115");
             System.err.println(e);
         }
     }
@@ -141,6 +150,9 @@ public final class Main {
                     System.out.println("the column is NULL");
                 }
                 columnIndex++;
+            }
+            if (interrupting) {
+                break;
             }
         }
     }
