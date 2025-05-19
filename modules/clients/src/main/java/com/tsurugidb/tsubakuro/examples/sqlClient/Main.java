@@ -35,6 +35,7 @@ public final class Main {
     private static String sql ="";
     private static boolean usePreparedStatement = false;
     private static boolean query = true;
+    private static boolean display = false;
 
     public static void main(String[] args) {
         // コマンドラインオプションの設定
@@ -43,6 +44,7 @@ public final class Main {
         options.addOption(Option.builder("s").argName("sql").hasArg().desc("Sql text.").build());
         options.addOption(Option.builder("q").argName("query").desc("Query mode.").build());
         options.addOption(Option.builder("p").argName("prepared statement").desc("Use prepared statement.").build());
+        options.addOption(Option.builder("d").argName("display result").desc("Display query result.").build());
 
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = null;
@@ -60,6 +62,10 @@ public final class Main {
             if (cmd.hasOption("q")) {
                 query = true;
                 System.err.println("query mode");
+                if (cmd.hasOption("d")) {
+                    display = true;
+                    System.err.println("display query result");
+                }
             }
         } catch (ParseException e) {
             System.err.println("cmd parser failed." + e);
@@ -79,13 +85,16 @@ public final class Main {
             }
 
             if (query) {
-                FutureResponse<ResultSet> rs;
+                FutureResponse<ResultSet> frs;
                 if (usePreparedStatement) {
-                    rs = transaction.executeQuery(preparedStatement);
+                    frs = transaction.executeQuery(preparedStatement);
                 } else {
-                    rs = transaction.executeQuery(sql);
+                    frs = transaction.executeQuery(sql);
                 }
-                rs.await();
+                var rs = frs.await();
+                if (display) {
+                    printResultset(rs);
+                }
                 rs.close();
             } else {
                 if (usePreparedStatement) {
@@ -96,6 +105,43 @@ public final class Main {
             }
         } catch (Exception e) {
             System.err.println(e);
+        }
+    }
+
+    static void printResultset(ResultSet resultSet) throws InterruptedException, IOException, ServerException {
+        int count = 1;
+
+        while (resultSet.nextRow()) {
+            System.out.println("---- ( count: " + count + " )----");
+            count++;
+            int columnIndex = 0;
+            var metadata = resultSet.getMetadata().getColumns();
+            while (resultSet.nextColumn()) {
+                if (!resultSet.isNull()) {
+                    switch (metadata.get(columnIndex).getAtomType()) {
+                    case INT4:
+                        System.out.println(resultSet.fetchInt4Value());
+                        break;
+                    case INT8:
+                        System.out.println(resultSet.fetchInt8Value());
+                        break;
+                    case FLOAT4:
+                        System.out.println(resultSet.fetchFloat4Value());
+                        break;
+                    case FLOAT8:
+                        System.out.println(resultSet.fetchFloat8Value());
+                        break;
+                    case CHARACTER:
+                        System.out.println(resultSet.fetchCharacterValue());
+                        break;
+                    default:
+                        throw new IOException("the column type is invalid");
+                    }
+                } else {
+                    System.out.println("the column is NULL");
+                }
+                columnIndex++;
+            }
         }
     }
 }
