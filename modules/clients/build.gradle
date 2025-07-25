@@ -146,6 +146,18 @@ tasks.register('runClose', JavaExec) {
     systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
 }
 
+tasks.register('runTransactionClose', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tsurugidb.tsubakuro.examples.transactionClose.Main'
+
+    systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'ipc:tsurugi'
+
+    systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
+    systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'
+    systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
+    systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
+}
+
 tasks.register('runKeepAlive', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'com.tsurugidb.tsubakuro.examples.keepAlive.Main'
@@ -211,6 +223,18 @@ tasks.register('runSessionCloseWithoutRSClose', JavaExec) {
     mainClass = 'com.tsurugidb.tsubakuro.examples.sessionCloseWithoutRSClose.Main'
 
     systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'tcp://localhost:12345'
+
+    systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
+    systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'
+    systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
+    systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
+}
+
+tasks.register('runAuthClient', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tsurugidb.tsubakuro.examples.authenticationClient.Main'
+
+    systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'ipc:tsurugi'
 
     systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
     systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'
