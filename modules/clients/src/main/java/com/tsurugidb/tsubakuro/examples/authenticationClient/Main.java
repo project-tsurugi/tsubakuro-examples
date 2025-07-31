@@ -30,6 +30,7 @@ public final class Main {
     private static String url = System.getProperty("tsurugi.dbname");
     private static long timeout = 500;  // milliseconds
 
+    private static boolean useTsurugi = false;
     private static boolean useToken = false;
     private static int sleepTime = 0;
     private static boolean wrongPassword = false;
@@ -39,6 +40,7 @@ public final class Main {
         // コマンドラインオプションの設定
         Options options = new Options();
 
+        options.addOption(Option.builder("c").argName("user equals tsurugi").desc("tsurugi.").build());
         options.addOption(Option.builder("t").argName("use token").desc("use token.").build());
         options.addOption(Option.builder("w").argName("wrong password").desc("wrong password.").build());
         options.addOption(Option.builder("s").argName("sleep").hasArg().desc("sleep a while.").build());
@@ -49,6 +51,10 @@ public final class Main {
         try {
             cmd = parser.parse(options, args);
 
+            if (cmd.hasOption("c")) {
+                useTsurugi = true;
+                System.err.println("use turugi");
+            }
             if (cmd.hasOption("t")) {
                 useToken = true;
                 System.err.println("use token");
@@ -69,6 +75,7 @@ public final class Main {
              Session session = SessionBuilder.connect(url)
              .withCredential(useToken ?
                              new RememberMeCredential(token) :
+                             useTsurugi ? new UsernamePasswordCredential("tsurugi", wrongPassword ? "drowssap" : "password") :
                              new UsernamePasswordCredential("user", wrongPassword ? "ssap" : "pass"))
              .create(timeout, TimeUnit.MILLISECONDS);
              SqlClient authenticationClient = SqlClient.attach(session); ) {
