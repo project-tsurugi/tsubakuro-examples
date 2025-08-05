@@ -30,17 +30,15 @@ public final class Main {
     private static String url = System.getProperty("tsurugi.dbname");
     private static long timeout = 500;  // milliseconds
 
-    private static boolean useTsurugi = false;
     private static boolean useToken = false;
     private static int sleepTime = 0;
     private static boolean wrongPassword = false;
-    private static String token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJyZWZyZXNoIiwiYXVkIjoiYXV0aGVudGljYXRpb24tbWFuYWdlciIsInRzdXJ1Z2kvYXV0aC9uYW1lIjoidXNlciIsImlzcyI6ImF1dGhlbnRpY2F0aW9uLW1hbmFnZXIiLCJleHAiOjE3NTA4MzE4MTksImlhdCI6MTc1MDc0NTQxOSwianRpIjoiZGQ4MjU4OGMtMWFiNC00MTNjLThhNGYtZDkxYmYyOGU5OTRlIn0.ifRlaNF742JDkWOx1DlijeE-CazKCHXikxxR2BUv6V1YobquEvGo6Wei0cbTCo45NABKXDd8Zrf0S7u8ARuMla4aQZksXgq0a96YfYDRd-c7VYPR8JxBf7mBF3Jtu3NBP6bhzDU-b0kytp9kURAnlJ2GFK8Z-3EwiDaHjWTnA3Y9W6PLPLfaO3f1t2XgNyU3MK0zXz_6Qyy_Yo9fyAhiPCxQPtyXRRwJqw43A77n3HLDb0geI4-5f10MJ7mlZUDvTW6CXTtZyizyyREAqbcpV_OghKKJF2-tSWMud9aBIejxA3f5RSJhziX7vwXc72WQqiZYJWbzpNL2RQOhHhRbYg";
+    private static String token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJyZWZyZXNoIiwiYXVkIjoiaGFyaW5va2kiLCJ0c3VydWdpL2F1dGgvbmFtZSI6InRzdXJ1Z2kiLCJpc3MiOiJoYXJpbm9raSIsImV4cCI6MTc1NDQ0ODI4MCwiaWF0IjoxNzU0MzYxODgwLCJqdGkiOiJiMGU1OTNjNS03Yjg0LTQxM2MtYjk0Yi1lYWIzMDkzYzhjZWQifQ.eXuNZj8pgc20vD9xEj0GG9fgu8jFE5weFtnkjs-T45_Hyc9RZgnPbG9iGehDOFmj6vbbeCHs8JKzeFKMikUerJll41wag7yNWheQgpsCpHVe-8Kjgsb8wug_HsL30spMGYjXErxN54nMctLaTDnyvzA12KnUTFcbOMHiNf9Bq1WbzDBaPcEe9WiEgTphwN2voQh8QgfdzQXyI0mRlDqV012xy5xRDcFrDWXsYp7QRXR1ZRWqloZOp_uTf6Q9XtpKHY8-4dHV4OEIh8HmkcrqbP-N8swCFWLfxEl67STLAhHAp_oCAcdgqVEzb7ZGk-1S0G1UZ46VHjdIVnPfSMbaWw";
 
     public static void main(String[] args) {
         // コマンドラインオプションの設定
         Options options = new Options();
 
-        options.addOption(Option.builder("c").argName("user equals tsurugi").desc("tsurugi.").build());
         options.addOption(Option.builder("t").argName("use token").desc("use token.").build());
         options.addOption(Option.builder("w").argName("wrong password").desc("wrong password.").build());
         options.addOption(Option.builder("s").argName("sleep").hasArg().desc("sleep a while.").build());
@@ -51,10 +49,6 @@ public final class Main {
         try {
             cmd = parser.parse(options, args);
 
-            if (cmd.hasOption("c")) {
-                useTsurugi = true;
-                System.err.println("use turugi");
-            }
             if (cmd.hasOption("t")) {
                 useToken = true;
                 System.err.println("use token");
@@ -75,8 +69,7 @@ public final class Main {
              Session session = SessionBuilder.connect(url)
              .withCredential(useToken ?
                              new RememberMeCredential(token) :
-                             useTsurugi ? new UsernamePasswordCredential("tsurugi", wrongPassword ? "drowssap" : "password") :
-                             new UsernamePasswordCredential("user", wrongPassword ? "ssap" : "pass"))
+                             new UsernamePasswordCredential("tsurugi", wrongPassword ? "drowssap" : "password"))
              .create(timeout, TimeUnit.MILLISECONDS);
              SqlClient authenticationClient = SqlClient.attach(session); ) {
 
@@ -89,8 +82,7 @@ public final class Main {
             }
 
         } catch (Exception e) {
-            System.err.println("catch exception at 115");
-            System.err.println(e);
+            e.printStackTrace();
         }
     }
 }
