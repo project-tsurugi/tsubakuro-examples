@@ -32,8 +32,9 @@ public final class Main {
 
     private static boolean useToken = false;
     private static int sleepTime = 0;
-    private static boolean wrongPassword = false;
+    private static boolean wrongCredential = false;
     private static String token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJyZWZyZXNoIiwiYXVkIjoiaGFyaW5va2kiLCJ0c3VydWdpL2F1dGgvbmFtZSI6InRzdXJ1Z2kiLCJpc3MiOiJoYXJpbm9raSIsImV4cCI6MTc1NDQ0ODI4MCwiaWF0IjoxNzU0MzYxODgwLCJqdGkiOiJiMGU1OTNjNS03Yjg0LTQxM2MtYjk0Yi1lYWIzMDkzYzhjZWQifQ.eXuNZj8pgc20vD9xEj0GG9fgu8jFE5weFtnkjs-T45_Hyc9RZgnPbG9iGehDOFmj6vbbeCHs8JKzeFKMikUerJll41wag7yNWheQgpsCpHVe-8Kjgsb8wug_HsL30spMGYjXErxN54nMctLaTDnyvzA12KnUTFcbOMHiNf9Bq1WbzDBaPcEe9WiEgTphwN2voQh8QgfdzQXyI0mRlDqV012xy5xRDcFrDWXsYp7QRXR1ZRWqloZOp_uTf6Q9XtpKHY8-4dHV4OEIh8HmkcrqbP-N8swCFWLfxEl67STLAhHAp_oCAcdgqVEzb7ZGk-1S0G1UZ46VHjdIVnPfSMbaWw";
+    private static String wrongToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJyZWZyZXNoIiwiYXVkIjoiYXV0aGVudGljYXRpb24tbWFuYWdlciIsInRzdXJ1Z2kvYXV0aC9uYW1lIjoiaG9yaWthd2EiLCJpc3MiOiJhdXRoZW50aWNhdGlvbi1tYW5hZ2VyIiwiZXhwIjoxNzQ5NzMyNDU5LCJpYXQiOjE3NDk2NDYwNTksImp0aSI6ImFmM2RlMjk1LTE2NzktNDZkYy04YmM4LTU2MWZmNzhkZTFkYyJ9.kflvbX9DEx_Rw29VWkMuyG8Vyuc5Do69jQ-BAnYKhkOFW94Jjpw7y0mbDKe5RfQc2VZ2jG5qikESTPt-U0EEupH9ns29j845iJPmIsTP_sPqN65keZEu3bu0XHGlQMZZ1cZ1wbekT8qVJQoteBx18a26YeetEpZni1i8ng9bMMF0eAMosWKMoHpa-29BW1avshjYPi8tcCXNql9-Vdyc5HGbTBq6TnFZNxnFiObNo1LpYLdArv-GsLK6Yswx4uosFVpn6TIQDaVbuBnC3_t53QPsCnweRc-4BwtFfi4DGQFXtiNC1kSan9scmwGRYkohOniFBPVlQSKmNBKHIbFbkQ";
 
     public static void main(String[] args) {
         // コマンドラインオプションの設定
@@ -51,11 +52,11 @@ public final class Main {
 
             if (cmd.hasOption("t")) {
                 useToken = true;
-                System.err.println("use token");
+                System.err.println("case of use token");
             }
             if (cmd.hasOption("w")) {
-                wrongPassword = true;
-                System.err.println("wrong password");
+                wrongCredential = true;
+                System.err.println("case of wrong credential");
             }
             if (cmd.hasOption("s")) {
                 sleepTime = Integer.parseInt(cmd.getOptionValue("s"));
@@ -68,8 +69,8 @@ public final class Main {
         try (
              Session session = SessionBuilder.connect(url)
              .withCredential(useToken ?
-                             new RememberMeCredential(token) :
-                             new UsernamePasswordCredential("tsurugi", wrongPassword ? "drowssap" : "password"))
+                             new RememberMeCredential(wrongCredential ? wrongToken : token) :
+                             new UsernamePasswordCredential("tsurugi", wrongCredential ? "drowssap" : "password"))
              .create(timeout, TimeUnit.MILLISECONDS);
              SqlClient authenticationClient = SqlClient.attach(session); ) {
 
