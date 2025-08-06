@@ -73,6 +73,8 @@ public final class Main {
              .create(timeout, TimeUnit.MILLISECONDS);
              SqlClient authenticationClient = SqlClient.attach(session); ) {
 
+            System.out.println("login with user '" + session.getUserName().await().get() + "'");
+
             if (sleepTime > 0) {
                 try {
                     Thread.sleep(sleepTime * 1000);
