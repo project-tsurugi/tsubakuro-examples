@@ -12,6 +12,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import com.tsurugidb.tsubakuro.exception.ServerException;
+import com.tsurugidb.tsubakuro.exception.CoreServiceException;
+import com.tsurugidb.tsubakuro.channel.common.connection.NullCredential;
 import com.tsurugidb.tsubakuro.channel.common.connection.UsernamePasswordCredential;
 import com.tsurugidb.tsubakuro.channel.common.connection.RememberMeCredential;
 import com.tsurugidb.tsubakuro.common.Session;
@@ -28,12 +30,15 @@ public final class Main {
     // -Ptsurugi.dbname=tcp://localhost:12345
     // when run this example by `./gradlew run` command
     private static String url = System.getProperty("tsurugi.dbname");
-    private static long timeout = 500;  // milliseconds
+    //    private static long timeout = 500;  // milliseconds
+    private static long timeout = 30000;  // milliseconds
 
     private static boolean useToken = false;
     private static int sleepTime = 0;
     private static boolean wrongCredential = false;
-    private static String token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJyZWZyZXNoIiwiYXVkIjoiaGFyaW5va2kiLCJ0c3VydWdpL2F1dGgvbmFtZSI6InRzdXJ1Z2kiLCJpc3MiOiJoYXJpbm9raSIsImV4cCI6MTc1NDQ0ODI4MCwiaWF0IjoxNzU0MzYxODgwLCJqdGkiOiJiMGU1OTNjNS03Yjg0LTQxM2MtYjk0Yi1lYWIzMDkzYzhjZWQifQ.eXuNZj8pgc20vD9xEj0GG9fgu8jFE5weFtnkjs-T45_Hyc9RZgnPbG9iGehDOFmj6vbbeCHs8JKzeFKMikUerJll41wag7yNWheQgpsCpHVe-8Kjgsb8wug_HsL30spMGYjXErxN54nMctLaTDnyvzA12KnUTFcbOMHiNf9Bq1WbzDBaPcEe9WiEgTphwN2voQh8QgfdzQXyI0mRlDqV012xy5xRDcFrDWXsYp7QRXR1ZRWqloZOp_uTf6Q9XtpKHY8-4dHV4OEIh8HmkcrqbP-N8swCFWLfxEl67STLAhHAp_oCAcdgqVEzb7ZGk-1S0G1UZ46VHjdIVnPfSMbaWw";
+    private static boolean noAuth = false;
+    private static boolean nullPassword = false;
+    private static String token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJyZWZyZXNoIiwiYXVkIjoiaGFyaW5va2kiLCJ0c3VydWdpL2F1dGgvbmFtZSI6InRzdXJ1Z2kiLCJpc3MiOiJoYXJpbm9raSIsImV4cCI6MTc1NTY3OTg3NiwiaWF0IjoxNzU1Njc2Mjc2LCJqdGkiOiI5ODg0ZGY5YS05N2YxLTQwYmEtYjY1MC02MDM3NjUzOTRmOTkifQ.LmoF-V3oA2_c1ne38zgdrHz8uYElh6sbfZNRu8yyHwM67B4T4aMQ6SiaGgLrGDGivfqYQmiub4UnRg1MeNazeZOwp1PQAnLh68OaL8csbuoeKWjrWimRglHmGv7L-D4eY9md1Fv_YjEiTWXl5UiIwQ4NkvZ22rvDiu6vNIGJ8xdDz2WQLIVSCdb1eOYxcrX9QclKw6K3JS5fAWxhhX-b2aUiwH3jqdHDT4IlpXxFLUJGUQ1Zw6L92gcFY65zOcD_moQywFC3GAQEstBBjVWQLyn8eEqbF5W73908VVfXnAlXz6d57dR0Ic67_T22ZVEHUyXLZSqQygWbR2v7hZng2Q";
     private static String wrongToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJyZWZyZXNoIiwiYXVkIjoiYXV0aGVudGljYXRpb24tbWFuYWdlciIsInRzdXJ1Z2kvYXV0aC9uYW1lIjoiaG9yaWthd2EiLCJpc3MiOiJhdXRoZW50aWNhdGlvbi1tYW5hZ2VyIiwiZXhwIjoxNzQ5NzMyNDU5LCJpYXQiOjE3NDk2NDYwNTksImp0aSI6ImFmM2RlMjk1LTE2NzktNDZkYy04YmM4LTU2MWZmNzhkZTFkYyJ9.kflvbX9DEx_Rw29VWkMuyG8Vyuc5Do69jQ-BAnYKhkOFW94Jjpw7y0mbDKe5RfQc2VZ2jG5qikESTPt-U0EEupH9ns29j845iJPmIsTP_sPqN65keZEu3bu0XHGlQMZZ1cZ1wbekT8qVJQoteBx18a26YeetEpZni1i8ng9bMMF0eAMosWKMoHpa-29BW1avshjYPi8tcCXNql9-Vdyc5HGbTBq6TnFZNxnFiObNo1LpYLdArv-GsLK6Yswx4uosFVpn6TIQDaVbuBnC3_t53QPsCnweRc-4BwtFfi4DGQFXtiNC1kSan9scmwGRYkohOniFBPVlQSKmNBKHIbFbkQ";
 
     public static void main(String[] args) {
@@ -43,6 +48,8 @@ public final class Main {
         options.addOption(Option.builder("t").argName("use token").desc("use token.").build());
         options.addOption(Option.builder("w").argName("wrong password").desc("wrong password.").build());
         options.addOption(Option.builder("s").argName("sleep").hasArg().desc("sleep a while.").build());
+        options.addOption(Option.builder("n").argName("no auth").desc("no auth.").build());
+        options.addOption(Option.builder("p").argName("password is null").desc("password is null.").build());
 
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = null;
@@ -62,23 +69,39 @@ public final class Main {
                 sleepTime = Integer.parseInt(cmd.getOptionValue("s"));
                 System.err.println("sleep for " + sleepTime + " seconds");
             }
+            if (cmd.hasOption("n")) {
+                noAuth = true;
+                System.err.println("case of no auth");
+            }
+            if (cmd.hasOption("p")) {
+                nullPassword = true;
+                System.err.println("case of null password");
+            }
         } catch (ParseException e) {
             System.err.println("cmd parser failed." + e);
         }
 
         try (
              Session session = SessionBuilder.connect(url)
-             .withCredential(useToken ?
+             .withCredential(noAuth ? NullCredential.INSTANCE :
+                             useToken ?
                              new RememberMeCredential(wrongCredential ? wrongToken : token) :
-                             new UsernamePasswordCredential("tsurugi", wrongCredential ? "drowssap" : "password"))
+                             new UsernamePasswordCredential("tsurugi", nullPassword ? null : wrongCredential ? "drowssap" : "password"))
              .create(timeout, TimeUnit.MILLISECONDS);
              SqlClient authenticationClient = SqlClient.attach(session); ) {
 
-            System.out.println("login with user '" + session.getUserName().await().get() + "'");
+            var uopt = session.getUserName().await();
+            if (uopt.isPresent()) {
+                System.out.println("login with user '" + uopt.get() + "'");
+                System.out.println("CredentialsExpirationTime '" + session.getCredentialsExpirationTime().await().toString() + "'");
+            } else {
+                System.out.println("login user name is empty, probably connecting to servers with authentication disabled");
+            }
 
             if (sleepTime > 0) {
                 try {
                     Thread.sleep(sleepTime * 1000);
+                    System.out.println("CredentialsExpirationTime '" + session.getCredentialsExpirationTime().await().toString() + "'");
                 } catch(InterruptedException e){
                     e.printStackTrace();
                 }
