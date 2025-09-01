@@ -37,6 +37,7 @@ public final class Main {
     private static boolean query = true;
     private static boolean display = false;
     private static boolean interrupting = false;
+    private static int sleepTime = 0;
 
     public static void main(String[] args) {
         // コマンドラインオプションの設定
@@ -47,6 +48,7 @@ public final class Main {
         options.addOption(Option.builder("p").argName("prepared statement").desc("Use prepared statement.").build());
         options.addOption(Option.builder("d").argName("display result").desc("Display query result.").build());
         options.addOption(Option.builder("i").argName("interrupting the reading").desc("interrupting the reading.").build());
+        options.addOption(Option.builder("z").argName("sleep").hasArg().desc("sleep a while.").build());
 
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = null;
@@ -72,6 +74,10 @@ public final class Main {
                     interrupting = true;
                     System.err.println("interrupt the ResultSet reading");
                 }
+            }
+            if (cmd.hasOption("z")) {
+                sleepTime = Integer.parseInt(cmd.getOptionValue("z"));
+                System.err.println("sleep for " + sleepTime + " seconds");
             }
         } catch (ParseException e) {
             System.err.println("cmd parser failed." + e);
@@ -100,6 +106,14 @@ public final class Main {
                 var rs = frs.await();
                 if (display) {
                     printResultset(rs);
+                }
+                if (sleepTime > 0) {
+                    try {
+                        System.out.println("sleep before close the ResultSet");
+                        Thread.sleep(sleepTime * 1000);
+                    } catch(InterruptedException e){
+                        e.printStackTrace();
+                    }
                 }
                 System.out.println("close the ResultSet begin");
                 rs.close();
