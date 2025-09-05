@@ -113,7 +113,11 @@ public final class Main {
             var uopt = session.getUserName().await();
             if (uopt.isPresent()) {
                 System.out.println("login with user '" + uopt.get() + "'");
-                System.out.println("AuthenticationExpirationTime '" + session.getAuthenticationExpirationTime().await().toString() + "'");
+                try {
+                    System.out.println("AuthenticationExpirationTime '" + session.getAuthenticationExpirationTime().await().toString() + "'");
+                } catch (ServerException e) {
+                    System.out.println("getAuthenticationExpirationTime() result in " + e);
+                }
             } else {
                 System.out.println("login user name is empty, probably connecting to servers with authentication disabled");
             }
