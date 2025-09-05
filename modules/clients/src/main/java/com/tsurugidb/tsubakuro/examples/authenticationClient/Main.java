@@ -16,6 +16,7 @@ import com.tsurugidb.tsubakuro.exception.CoreServiceException;
 import com.tsurugidb.tsubakuro.channel.common.connection.NullCredential;
 import com.tsurugidb.tsubakuro.channel.common.connection.UsernamePasswordCredential;
 import com.tsurugidb.tsubakuro.channel.common.connection.RememberMeCredential;
+import com.tsurugidb.tsubakuro.channel.common.connection.FileCredential;
 import com.tsurugidb.tsubakuro.common.Session;
 import com.tsurugidb.tsubakuro.common.SessionBuilder;
 import com.tsurugidb.tsubakuro.sql.SqlClient;
@@ -33,6 +34,7 @@ public final class Main {
     //    private static long timeout = 500;  // milliseconds
     private static long timeout = 30000;  // milliseconds
 
+    private static boolean useFile = false;
     private static boolean useToken = false;
     private static int sleepTime = 0;
     private static boolean wrongCredential = false;
@@ -47,6 +49,7 @@ public final class Main {
         // コマンドラインオプションの設定
         Options options = new Options();
 
+        options.addOption(Option.builder("f").argName("use file").desc("use file.").build());
         options.addOption(Option.builder("t").argName("use token").desc("use token.").build());
         options.addOption(Option.builder("w").argName("wrong password").desc("wrong password.").build());
         options.addOption(Option.builder("s").argName("sleep").hasArg().desc("sleep a while.").build());
@@ -61,6 +64,10 @@ public final class Main {
         try {
             cmd = parser.parse(options, args);
 
+            if (cmd.hasOption("f")) {
+                useFile = true;
+                System.err.println("case of use file");
+            }
             if (cmd.hasOption("t")) {
                 useToken = true;
                 System.err.println("case of use token");
@@ -96,6 +103,7 @@ public final class Main {
         try (
              Session session = SessionBuilder.connect(url)
              .withCredential(noAuth ? NullCredential.INSTANCE :
+                             useFile ? FileCredential.load(FileCredential.DEFAULT_CREDENTIAL_PATH.get()) :
                              useToken ?
                              new RememberMeCredential(wrongCredential ? wrongToken : token) :
                              new UsernamePasswordCredential("tsurugi", nullPassword ? null : wrongCredential ? "drowssap" : "password"))
