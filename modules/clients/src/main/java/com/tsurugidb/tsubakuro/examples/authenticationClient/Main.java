@@ -42,8 +42,11 @@ public final class Main {
     private static boolean nullPassword = false;
     private static boolean updateAuthentication = false;
     private static boolean updateAuthenticationDiffUser = false;
+    private static boolean longUsernameAnsPassword = false;
     private static String token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJyZWZyZXNoIiwiYXVkIjoiaGFyaW5va2kiLCJ0c3VydWdpL2F1dGgvbmFtZSI6InRzdXJ1Z2kiLCJpc3MiOiJoYXJpbm9raSIsImV4cCI6MTc1NTY3OTg3NiwiaWF0IjoxNzU1Njc2Mjc2LCJqdGkiOiI5ODg0ZGY5YS05N2YxLTQwYmEtYjY1MC02MDM3NjUzOTRmOTkifQ.LmoF-V3oA2_c1ne38zgdrHz8uYElh6sbfZNRu8yyHwM67B4T4aMQ6SiaGgLrGDGivfqYQmiub4UnRg1MeNazeZOwp1PQAnLh68OaL8csbuoeKWjrWimRglHmGv7L-D4eY9md1Fv_YjEiTWXl5UiIwQ4NkvZ22rvDiu6vNIGJ8xdDz2WQLIVSCdb1eOYxcrX9QclKw6K3JS5fAWxhhX-b2aUiwH3jqdHDT4IlpXxFLUJGUQ1Zw6L92gcFY65zOcD_moQywFC3GAQEstBBjVWQLyn8eEqbF5W73908VVfXnAlXz6d57dR0Ic67_T22ZVEHUyXLZSqQygWbR2v7hZng2Q";
     private static String wrongToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJyZWZyZXNoIiwiYXVkIjoiYXV0aGVudGljYXRpb24tbWFuYWdlciIsInRzdXJ1Z2kvYXV0aC9uYW1lIjoiaG9yaWthd2EiLCJpc3MiOiJhdXRoZW50aWNhdGlvbi1tYW5hZ2VyIiwiZXhwIjoxNzQ5NzMyNDU5LCJpYXQiOjE3NDk2NDYwNTksImp0aSI6ImFmM2RlMjk1LTE2NzktNDZkYy04YmM4LTU2MWZmNzhkZTFkYyJ9.kflvbX9DEx_Rw29VWkMuyG8Vyuc5Do69jQ-BAnYKhkOFW94Jjpw7y0mbDKe5RfQc2VZ2jG5qikESTPt-U0EEupH9ns29j845iJPmIsTP_sPqN65keZEu3bu0XHGlQMZZ1cZ1wbekT8qVJQoteBx18a26YeetEpZni1i8ng9bMMF0eAMosWKMoHpa-29BW1avshjYPi8tcCXNql9-Vdyc5HGbTBq6TnFZNxnFiObNo1LpYLdArv-GsLK6Yswx4uosFVpn6TIQDaVbuBnC3_t53QPsCnweRc-4BwtFfi4DGQFXtiNC1kSan9scmwGRYkohOniFBPVlQSKmNBKHIbFbkQ";
+    private static String longUsername ="12345678901234567890123456789012345678901234567890123456789012";
+    private static String longPassword ="12345678901234567890123456789012345678901234567890123456789012";
 
     public static void main(String[] args) {
         // コマンドラインオプションの設定
@@ -57,6 +60,7 @@ public final class Main {
         options.addOption(Option.builder("p").argName("password is null").desc("password is null.").build());
         options.addOption(Option.builder("u").argName("update credential").desc("update credential.").build());
         options.addOption(Option.builder("d").argName("update credential diff user").desc("update credential diff user.").build());
+        options.addOption(Option.builder("l").argName("long username and password").desc("long username and password.").build());
 
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = null;
@@ -96,13 +100,18 @@ public final class Main {
                 updateAuthenticationDiffUser = true;
                 System.err.println("do update credential with different user");
             }
+            if (cmd.hasOption("l")) {
+                longUsernameAnsPassword = true;
+                System.err.println("long username and password");
+            }
         } catch (ParseException e) {
             System.err.println("cmd parser failed." + e);
         }
 
         try (
              Session session = SessionBuilder.connect(url)
-             .withCredential(noAuth ? NullCredential.INSTANCE :
+             .withCredential(longUsernameAnsPassword ? new UsernamePasswordCredential(longUsername, longPassword) :
+                             noAuth ? NullCredential.INSTANCE :
                              useFile ? FileCredential.load(FileCredential.DEFAULT_CREDENTIAL_PATH.get()) :
                              useToken ?
                              new RememberMeCredential(wrongCredential ? wrongToken : token) :
