@@ -104,3 +104,15 @@ tasks.register('run1365', JavaExec) {
     systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
     systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
 }
+
+tasks.register('run1368', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tsurugidb.tsubakuro.examples.isAlive.SessionIsAliveAndClose'
+
+    systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'tcp://localhost:12345'
+
+    systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
+    systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'
+    systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
+    systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
+}
