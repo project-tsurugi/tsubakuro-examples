@@ -254,3 +254,15 @@ tasks.register('runSystemClient', JavaExec) {
     systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
     systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
 }
+
+tasks.register('runRegisterTransactionTpmId', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tsurugidb.tsubakuro.examples.datastore.RegisterTransactionTpmId'
+
+    systemProperty 'tsurugi.dbname', findProperty('tsurugi.dbname') ?: 'ipc:tsurugi'
+
+    systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', findProperty('loglevel') ?: 'info'
+    systemProperty 'org.slf4j.simpleLogger.showThreadName', 'false'
+    systemProperty 'org.slf4j.simpleLogger.showShortLogName', 'true'
+    systemProperty 'org.slf4j.simpleLogger.levelInBrackets', 'true'
+}
