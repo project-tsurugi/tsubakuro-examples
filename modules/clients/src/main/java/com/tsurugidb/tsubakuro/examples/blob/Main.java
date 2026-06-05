@@ -59,6 +59,7 @@ public final class Main {
     private static boolean useStream = false;
     private static boolean doesNotUse = false;
     private static boolean largeData = false;
+    private static int loop = 1;
     private static char faultType = 'n';
 
     private final static String TABLE = "testTable";
@@ -77,6 +78,7 @@ public final class Main {
         options.addOption(Option.builder("d").argName("does not use BLOB").desc("does not use BLOB.").build());
         options.addOption(Option.builder("l").argName("large data").desc("use large test data.").build());
         options.addOption(Option.builder("f").argName("fault injection").hasArg().desc("fault injection.").build());
+        options.addOption(Option.builder("m").argName("multiple query").hasArg().desc("multiple query.").build());
 
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = null;
@@ -104,6 +106,9 @@ public final class Main {
             }
             if (cmd.hasOption("l")) {
                 largeData = true;
+            }
+            if (cmd.hasOption("m")) {
+                loop = Integer.parseInt(cmd.getOptionValue("m"));
             }
             if (cmd.hasOption("f")) {
                 faultType = cmd.getOptionValue("f").charAt(0);
@@ -147,6 +152,7 @@ public final class Main {
 
             PreparedStatement preparedStatement = null;
             if (query) {
+                for (int lc = 0; lc < loop; lc++) {
                 System.out.println(blobTransferMedium.getBlobTransferType());
                 System.out.println(blobTransferMedium.getParameters());
 
@@ -241,6 +247,7 @@ public final class Main {
                     System.out.println("====");
                 }
                 resultSet.close();
+                }
 
             } else {
 
@@ -256,7 +263,7 @@ public final class Main {
 
                     if (largeData) {
                         if (Files.notExists(path)) {
-                            createHugeFile(path, 10);
+                            createHugeFile(path, 1024);
                         } else {
                             throw new AssertionError();
                         }
@@ -336,7 +343,7 @@ public final class Main {
     static void createHugeFile(final Path path, int size) throws IOException {
         Iterable<String> lines = () -> Stream
             .generate(() -> RandomStringUtils.randomAlphanumeric(size))
-            .limit(1000000).iterator();
+            .limit(1024).iterator();
         Files.write(path, lines);
     }
 }
