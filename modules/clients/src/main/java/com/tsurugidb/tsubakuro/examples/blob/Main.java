@@ -140,11 +140,15 @@ public final class Main {
 
         // execute DML
         System.err.println(query ? "== select ==" : "== insert ==");
+        var builder = SessionBuilder.connect(url)
+            .withCredential(new UsernamePasswordCredential("user", "pass"))
+            .withBlobTransfer(doesNotUse ? BlobTransferType.DOES_NOT_USE : (privileged ? BlobTransferType.PRIVILEGED : BlobTransferType.RELAY));
+        if (faultType == 'a') {
+            builder = builder.withBlobRelayEndpoint("dns:///123.45.67.89:52345");
+        }
+
         try (
-             Session session = SessionBuilder.connect(url)
-             .withCredential(new UsernamePasswordCredential("user", "pass"))
-             .withBlobTransfer(doesNotUse ? BlobTransferType.DOES_NOT_USE : (privileged ? BlobTransferType.PRIVILEGED : BlobTransferType.RELAY))
-             .create(timeout, TimeUnit.MILLISECONDS);
+             Session session = builder.create(timeout, TimeUnit.MILLISECONDS);
              SqlClient sqlClient = SqlClient.attach(session);
              var transaction = sqlClient.createTransaction().get(timeout, TimeUnit.MILLISECONDS)) {
 
